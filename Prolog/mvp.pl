@@ -28,3 +28,21 @@ is_polynomial(poly(Monomials)) :-
     is_list(Monomials),
     foreach(member(M, Monomials), is_monomial(M)).
 
+
+
+%%%is_zero/1:
+%is_zero([]):- !.
+%
+is_zero(X) :-
+    is_monomial(X), X = m(0,0,[]), !.
+
+%is_zero(m(C, _, _)) :-
+ %   C =:= 0.
+
+is_zero(X) :-
+    is_polynomial(X),
+    X = poly(M),
+    foreach(member(Y, M), is_zero(Y)).
+
+
+
