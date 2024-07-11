@@ -50,3 +50,31 @@ is_zero(X) :-
 
 
 
+%%% as_monomial/2:
+%%% ordinamento in modo crescente per grado
+%%% con spareggio rispetto alle variabili
+
+as_monomial(E, _) :-
+    %coefficiente
+    first_symbol(E,C),
+
+    write(C)
+   % integer(C),
+    %C is [C],
+   % append(M, C, M)
+    %totalDegree
+   % sum_exp(V, _)
+    .
+
+% Base case: if E is a number or an atom, the first symbol is E itself.
+first_symbol(E, [E]) :-
+    (number(E); atom(E)), !.
+
+% Recursive case: if E is a compound term, extract the first argument.
+first_symbol(E, Symbol) :-
+    E =.. [_ | Args],  % Decompose the term into functor and arguments
+    Args = [FirstArg | _],   % Get the first argument
+    first_symbol(FirstArg, Symbol).  % Recursively find the first symbol
+
+%sum_exp(M, T):-
+
