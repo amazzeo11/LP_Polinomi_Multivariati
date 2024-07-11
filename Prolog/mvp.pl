@@ -34,10 +34,14 @@ is_polynomial(poly(Monomials)) :-
 %is_zero([]):- !.
 %
 is_zero(X) :-
-    is_monomial(X), X = m(0,0,[]), !.
+    is_monomial(X),
+    X = m(0, 0, []),
+    !.
 
 %is_zero(m(C, _, _)) :-
  %   C =:= 0.
+
+is_zero(poly([])):- !.
 
 is_zero(X) :-
     is_polynomial(X),
