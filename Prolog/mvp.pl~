@@ -83,39 +83,3 @@ first_symbol(E, Symbol) :-
     first_symbol(FirstArg, Symbol).  % Recursively find the first symbol
 
 
-
-% Predicato principale che calcola il grado totale di un monomio.
-grado_totale(Monomio, GradoTotale) :-
-    atom_to_term(Monomio, Term, _),
-    scomponi(Term, Termini),
-    estrai_esponenti(Termini, Esponenti),
-    somma_lista(Esponenti, GradoTotale).
-
-% Scompone il monomio nei suoi termini costituenti.
-scomponi(Term, [Term]) :-
-    atomic(Term),
-    !.
-scomponi(Term, Termini) :-
-    Term =.. [*, Term1, Term2],
-    scomponi(Term1, Termini1),
-    scomponi(Term2, Termini2),
-    append(Termini1, Termini2, Termini).
-
-% Estrae gli esponenti delle variabili dai termini.
-estrai_esponenti([], []).
-estrai_esponenti([Term | Rest], [1 | Esponenti]) :-
-    atomic(Term),
-    \+ integer(Term),
-    !,
-    estrai_esponenti(Rest, Esponenti).
-estrai_esponenti([_^Exp | Rest], [Exp | Esponenti]) :-
-    !,
-    estrai_esponenti(Rest, Esponenti).
-estrai_esponenti([_ | Rest], Esponenti) :-
-    estrai_esponenti(Rest, Esponenti).
-
-% Predicato per sommare gli elementi di una lista.
-somma_lista([], 0).
-somma_lista([H | T], Somma) :-
-    somma_lista(T, Rest),
-    Somma is H + Rest.
