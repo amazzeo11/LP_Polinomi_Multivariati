@@ -54,18 +54,24 @@ is_zero(X) :-
 %%% ordinamento in modo crescente per grado
 %%% con spareggio rispetto alle variabili
 
-as_monomial(E, _) :-
-    %coefficiente
-    first_symbol(E,C),
-    term_to_list(C,C),
-    write(C)
-   % integer(C),
-    %C is [C],
-   % append(M, C, M)
-    %totalDegree
-   % sum_exp(V, _)
-    .
+%as_monomial(E, M) :-
 
+    %coefficiente
+   % first_symbol(E,C),
+   % integer(C),
+   % M is m(C),
+  %  write(M)
+       %totalDegree
+   % sum_exp(V, _)
+  %  .
+
+   as_monomial(E, m(C,T,V)):-
+     first_symbol(E,S),
+    integer(S),
+    C is S,
+    grado_totale(E, S),
+    T is S,
+    V is 0.
 % Base case: if E is a number or an atom, the first symbol is E itself.
 first_symbol(E, E) :-
     (number(E); atom(E)), !.
@@ -76,5 +82,40 @@ first_symbol(E, Symbol) :-
     Args = [FirstArg | _],   % Get the first argument
     first_symbol(FirstArg, Symbol).  % Recursively find the first symbol
 
-%sum_exp(M, T):-
 
+
+% Predicato principale che calcola il grado totale di un monomio.
+grado_totale(Monomio, GradoTotale) :-
+    atom_to_term(Monomio, Term, _),
+    scomponi(Term, Termini),
+    estrai_esponenti(Termini, Esponenti),
+    somma_lista(Esponenti, GradoTotale).
+
+% Scompone il monomio nei suoi termini costituenti.
+scomponi(Term, [Term]) :-
+    atomic(Term),
+    !.
+scomponi(Term, Termini) :-
+    Term =.. [*, Term1, Term2],
+    scomponi(Term1, Termini1),
+    scomponi(Term2, Termini2),
+    append(Termini1, Termini2, Termini).
+
+% Estrae gli esponenti delle variabili dai termini.
+estrai_esponenti([], []).
+estrai_esponenti([Term | Rest], [1 | Esponenti]) :-
+    atomic(Term),
+    \+ integer(Term),
+    !,
+    estrai_esponenti(Rest, Esponenti).
+estrai_esponenti([_^Exp | Rest], [Exp | Esponenti]) :-
+    !,
+    estrai_esponenti(Rest, Esponenti).
+estrai_esponenti([_ | Rest], Esponenti) :-
+    estrai_esponenti(Rest, Esponenti).
+
+% Predicato per sommare gli elementi di una lista.
+somma_lista([], 0).
+somma_lista([H | T], Somma) :-
+    somma_lista(T, Rest),
+    Somma is H + Rest.
