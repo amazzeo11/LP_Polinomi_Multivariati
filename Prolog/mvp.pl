@@ -66,7 +66,7 @@ as_monomial(E, m(C, T, V)) :-
     sort(2,@=<,Vs,Vps),
     V = Vps.
 
-
+%%%caso in cui il coefficiente del monomio non è esplicito
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
     \+integer(S),
@@ -97,7 +97,7 @@ first_symbol(E, Symbol) :-
 %%% calcola il grado complessivo del monomio
 
 grado_totale(E, GradoTotale) :-
-    scomponi(E, Termini),
+    scomponi_m(E, Termini),
     estrai_esponenti(Termini, Esponenti),
     somma_lista(Esponenti, GradoTotale).
 
@@ -105,18 +105,18 @@ grado_totale(E, GradoTotale) :-
 %%% scomponi/2:
 %%% Scompone il monomio in termini singoli
 
-scomponi(E, [E]) :-
+scomponi_m(E, [E]) :-
     atomic(E),
     !.
 
-scomponi(E, Termini) :-
+scomponi_m(E, Termini) :-
     E =.. [*, T1, T2],
-    scomponi(T1, Term1),
-    scomponi(T2, Term2),
+    scomponi_m(T1, Term1),
+    scomponi_m(T2, Term2),
     !,
     append(Term1, Term2, Termini).
 
-scomponi(E, [E]) :-
+scomponi_m(E, [E]) :-
     E =.. [_ | _].
 
 
@@ -147,7 +147,7 @@ somma_lista([H | T], Somma) :-
 
 
 var_powers(E, V) :-
-    scomponi(E, E1),
+    scomponi_m(E, E1),
     maplist(convert_vp, E1, V1),
     !,
     exclude(==(null), V1, V).
@@ -162,4 +162,30 @@ convert_vp(T, v(1, T)) :-
 
 convert_vp(T, null) :-
     T =.. [_|_].
+
+
+
+as_polynomial(E, poly(P)) :-
+    scomponi_p(E,M),
+    maplist(as_monomial, M, P).
+
+
+
+scomponi_p(E, [E]) :-
+    atomic(E),
+    !.
+
+scomponi_p(E, Termini) :-
+    E =.. [+, T1, T2],
+    scomponi_p(T1, Term1),
+    scomponi_p(T2, Term2),
+    !,
+    append(Term1, Term2, Termini).
+
+scomponi_p(E, Termini) :-
+    E =.. [-, T1, T2],
+    scomponi_p(T1, Term1),
+    scomponi_p(T2, Term2),
+    !,
+    append(Term1, Term2, Termini).
 
