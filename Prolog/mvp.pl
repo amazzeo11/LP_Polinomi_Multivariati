@@ -62,9 +62,22 @@ as_monomial(E, m(C, T, V)) :-
     !,
     T is GradoTotale,
     var_powers(E, Varpws),
-    V = Varpws.
+    sort(1,@>=,Varpws,Vs),
+    sort(2,@=<,Vs,Vps),
+    V = Vps.
 
 
+as_monomial(E, m(C, T, V)) :-
+    first_symbol(E, S),
+    \+integer(S),
+    C is 1,
+    grado_totale(E, GradoTotale),
+    !,
+    T is GradoTotale,
+    var_powers(E, Varpws),
+    sort(1,@>=,Varpws,Vs),
+    sort(2,@=<,Vs,Vps),
+    V = Vps.
 
 
 %%% first_symbol/2:
@@ -143,9 +156,9 @@ var_powers(E, V) :-
 convert_vp(T, v(Exp, S)) :-
     T =.. [^, S, Exp].
 
-convert_vp(T, v(1, S)) :-
-    \+ atomic(T),
-    T =.. [S].
+convert_vp(T, v(1, T)) :-
+    atomic(T),
+   \+integer(T).
 
 convert_vp(T, null) :-
     T =.. [_|_].
