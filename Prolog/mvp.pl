@@ -54,79 +54,99 @@ is_zero(X) :-
 %%% ordinamento in modo crescente per grado
 %%% con spareggio rispetto alle variabili
 
-%as_monomial(E, M) :-
-
-    %coefficiente
-   % first_symbol(E,C),
-   % integer(C),
-   % M is m(C),
-  %  write(M)
-       %totalDegree
-   % sum_exp(V, _)
-  %  .
-
- %  as_monomial(E, m(C,T,V)):-
- %    first_symbol(E,S),
-  %  integer(S),
- %   C is S,
-  %  grado_totale(E, S),
- %   T is S,
-  %  V is 0.
-
-% Base case: if E is a number or an atom, the first symbol is E itself.
-first_symbol(E, E) :-
-    (number(E); atom(E)), !.
-
-% Recursive case: if E is a compound term, extract the first argument.
-first_symbol(E, Symbol) :-
-    E =.. [_ | Args],  % Decompose the term into functor and arguments
-    Args = [FirstArg | _],   % Get the first argument
-    first_symbol(FirstArg, Symbol).  % Recursively find the first symbol
-
-% Predicato principale che calcola il grado totale di un monomio.
-grado_totale(Term, GradoTotale) :-
-    scomponi(Term, Termini),
-    estrai_esponenti(Termini, Esponenti),
-    somma_lista(Esponenti, GradoTotale).
-
-% Scompone il monomio nei suoi termini costituenti.
-scomponi(Term, [Term]) :-
-    atomic(Term),
-    !.
-scomponi(Term, Termini) :-
-    Term =.. [*, Term1, Term2],
-    scomponi(Term1, Termini1),
-    scomponi(Term2, Termini2),
-    append(Termini1, Termini2, Termini).
-scomponi(Term, [Term]) :-
-    Term =.. [_ | _].
-
-% Estrae gli esponenti delle variabili dai termini.
-estrai_esponenti([], []).
-estrai_esponenti([Term | Rest], [1 | Esponenti]) :-
-    atomic(Term),
-    \+ integer(Term),
-    !,
-    estrai_esponenti(Rest, Esponenti).
-estrai_esponenti([_^Exp | Rest], [Exp | Esponenti]) :-
-    !,
-    estrai_esponenti(Rest, Esponenti).
-estrai_esponenti([_ | Rest], Esponenti) :-
-    estrai_esponenti(Rest, Esponenti).
-
-% Predicato per sommare gli elementi di una lista.
-somma_lista([], 0).
-somma_lista([H | T], Somma) :-
-    somma_lista(T, Rest),
-    Somma is H + Rest.
-
-% Predicato principale per la conversione di un'espressione in monomio.
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
     integer(S),
     C is S,
     grado_totale(E, GradoTotale),
+    !,
     T is GradoTotale,
-    V is 0.
+    var_powers(E, Varpws),
+    V = Varpws.
 
+
+
+
+%%% first_symbol/2:
+%%% estrae il primo simbolo dall'espressione E
+
+first_symbol(E, E) :-
+    (number(E); atom(E)), !.
+
+first_symbol(E, Symbol) :-
+    E =.. [_ | Args],  % Decompose the term into functor and arguments
+    Args = [FirstArg | _],   % Get the first argument
+    first_symbol(FirstArg, Symbol).  % Recursively find the first symbol
+
+
+
+%%% grado totale/2:
+%%% calcola il grado complessivo del monomio
+
+grado_totale(E, GradoTotale) :-
+    scomponi(E, Termini),
+    estrai_esponenti(Termini, Esponenti),
+    somma_lista(Esponenti, GradoTotale).
+
+
+%%% scomponi/2:
+%%% Scompone il monomio in termini singoli
+
+scomponi(E, [E]) :-
+    atomic(E),
+    !.
+
+scomponi(E, Termini) :-
+    E =.. [*, T1, T2],
+    scomponi(T1, Term1),
+    scomponi(T2, Term2),
+    !,
+    append(Term1, Term2, Termini).
+
+scomponi(E, [E]) :-
+    E =.. [_ | _].
+
+
+%%% estrai_esponenti/2:
+%%% Estrae gli esponenti delle variabili dai singoli termini
+
+estrai_esponenti([], []).
+estrai_esponenti([E | Rest], [1 | Esponenti]) :-
+    atomic(E),
+    \+ integer(E),
+    !,
+    estrai_esponenti(Rest, Esponenti).
+
+estrai_esponenti([_^Exp | Rest], [Exp | Esponenti]) :-
+    !,
+    estrai_esponenti(Rest, Esponenti).
+
+estrai_esponenti([_ | Rest], Esponenti) :-
+    estrai_esponenti(Rest, Esponenti).
+
+%%% somma_lista/2:
+%%% Calcola la somma degli elementi della lista
+
+somma_lista([], 0).
+somma_lista([H | T], Somma) :-
+    somma_lista(T, Rest),
+    Somma is H + Rest.
+
+
+var_powers(E, V) :-
+    scomponi(E, E1),
+    maplist(convert_vp, E1, V1),
+    !,
+    exclude(==(null), V1, V).
+
+
+convert_vp(T, v(Exp, S)) :-
+    T =.. [^, S, Exp].
+
+convert_vp(T, v(1, S)) :-
+    \+ atomic(T),
+    T =.. [S].
+
+convert_vp(T, null) :-
+    T =.. [_|_].
 
