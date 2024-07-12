@@ -88,7 +88,7 @@ first_symbol(E, E) :-
 
 first_symbol(E, Symbol) :-
     E =.. [_ | Args],  % Decompose the term into functor and arguments
-    Args = [FirstArg | _],   % Get the first argument
+    Args = [FirstArg | _],  % Get the first argument,
     first_symbol(FirstArg, Symbol).  % Recursively find the first symbol
 
 
@@ -170,12 +170,6 @@ as_polynomial(E, poly(P)) :-
     maplist(as_monomial, M, P).
 
 
-
-
-scomponi_p(E, [E]) :-
-    atomic(E),
-    !.
-
 scomponi_p(E, Termini) :-
     E =.. [+, T1, T2],
     scomponi_p(T1, Term1),
@@ -183,12 +177,18 @@ scomponi_p(E, Termini) :-
     !,
     append(Term1, Term2, Termini).
 
-scomponi_p(E, [E]) :-
-    E =.. [_ | _].
-
 scomponi_p(E, Termini) :-
     E =.. [-, T1, T2],
     scomponi_p(T1, Term1),
     scomponi_p(T2, Term2),
-    !,
+     !,
     append(Term1, Term2, Termini).
+
+
+scomponi_p(E, [E]) :-
+    E =.. [_ | _].
+
+
+scomponi_p(E, [E]) :-
+    atomic(E),write("ci entro"),
+    !.
