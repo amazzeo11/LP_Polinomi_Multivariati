@@ -171,6 +171,7 @@ as_polynomial(E, poly(P)) :-
 
 
 
+
 scomponi_p(E, [E]) :-
     atomic(E),
     !.
@@ -182,10 +183,12 @@ scomponi_p(E, Termini) :-
     !,
     append(Term1, Term2, Termini).
 
+scomponi_p(E, [E]) :-
+    E =.. [_ | _].
+
 scomponi_p(E, Termini) :-
     E =.. [-, T1, T2],
     scomponi_p(T1, Term1),
     scomponi_p(T2, Term2),
     !,
     append(Term1, Term2, Termini).
-
