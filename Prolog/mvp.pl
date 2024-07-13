@@ -329,3 +329,17 @@ rimuovi_zeri([m(0, _, _) | T], R) :-
     rimuovi_zeri(T, R).
 rimuovi_zeri([H | T], [H | R]) :-
     rimuovi_zeri(T, R).
+
+
+% Predicato principale per la sottrazione
+mvp_minus(poly(Monomi1), poly(Monomi2), poly(Result)) :-
+    inverti_segni(Monomi2, Monomi2Neg),
+    append(Monomi1, Monomi2Neg, MonomiTotali),
+    somma_monomi(MonomiTotali, MonomiCombinati),
+    rimuovi_zeri(MonomiCombinati, Result).
+
+% Inverti i segni dei coefficienti dei monomi
+inverti_segni([], []).
+inverti_segni([m(Coeff, TD, VP) | T], [m(CoeffNeg, TD, VP) | T1]) :-
+    CoeffNeg is -Coeff,
+    inverti_segni(T, T1).
