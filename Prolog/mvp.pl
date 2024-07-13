@@ -235,20 +235,17 @@ scomponi_negativo(E, [ENeg]) :-
     ENeg is -E,
     !.
 
-
-
-% Definizione della funzione principale
-pprint_polynomial(poly(Monomi)) :-
-    maplist(monomio_to_string, Monomi, Termini),
+% Definizione del predicato principale per la stampa del polinomio
+pprint_polynomial(poly(Monomials)) :-
+    maplist(monomio_to_string, Monomials, Termini),
     atomic_list_concat(Termini, ' + ', Polinomio),
     writeln(Polinomio).
 
 % Conversione di un monomio in una stringa
-monomio_to_string(m(Coefficiente, Costante, Variabili), Term) :-
+monomio_to_string(m(Coefficiente, _, Variabili), Term) :-
     coeff_to_string(Coefficiente, CoeffString),
     vars_to_string(Variabili, VarsString),
-    const_to_string(Costante, ConstString),
-    format(atom(Term), '~w~w~w', [CoeffString, VarsString, ConstString]).
+    format(atom(Term), '~w~w', [CoeffString, VarsString]).
 
 % Conversione del coefficiente in stringa
 coeff_to_string(Coefficiente, '') :- Coefficiente =:= 1, !.
@@ -265,8 +262,3 @@ vars_to_string([v(Esponente, Nome) | Vars], VarsString) :-
     ),
     vars_to_string(Vars, RestVarsString),
     atom_concat(Var, RestVarsString, VarsString).
-
-% Conversione della costante in stringa
-const_to_string(0, '').
-const_to_string(Costante, ConstString) :-
-    number_string(Costante, ConstString).
