@@ -304,95 +304,112 @@ extract_v(m(_,_,V), Vs) :-
 
 
 % Predicato principale
-mvp_plus(poly(Monomi1), poly(Monomi2), poly(Result)) :-
-    append(Monomi1, Monomi2, MonomiTotali),
-    somma_monomi(MonomiTotali, MonomiCombinati),!,
-    rimuovi_zeri(MonomiCombinati, Result).
+mvp_plus(poly(M1), poly(M2), poly(Result)) :-
+    append(M1, M2, Ms),
+    sum_ms(Ms, Mc),!,
+    remove_zeros(Mc, Result).
 
 % Somma monomi con lo stesso TotalDegree e VarPowers
-somma_monomi([], []).
-somma_monomi([m(Coeff, TD, VP) | T], [m(CoeffS, TD, VP) | R]) :-
-    somma_monomio(m(Coeff, TD, VP), T, CoeffS, T1),
-    somma_monomi(T1, R).
+sum_ms([], []).
+sum_ms([m(C, TD, VP) | T], [m(CS, TD, VP) | R]) :-
+    sum_m(m(C, TD, VP), T, CS, T1),
+    sum_ms(T1, R).
 
 % Somma un singolo monomio con quelli uguali nella lista
-somma_monomio(m(Coeff, _, _), [], Coeff, []).
-somma_monomio(m(Coeff, TD, VP), [m(Coeff1, TD, VP) | T], CoeffS, R) :-
-    CoeffS1 is Coeff + Coeff1,
-    somma_monomio(m(CoeffS1, TD, VP), T, CoeffS, R).
-somma_monomio(M, [H | T], CoeffS, [H | R]) :-
-    somma_monomio(M, T, CoeffS, R).
+sum_m(m(C, _, _), [], C, []).
+sum_m(m(C, TD, VP), [m(C1, TD, VP) | T], CS, R) :-
+    CS1 is C + C1,
+    sum_m(m(CS1, TD, VP), T, CS, R).
+sum_m(M, [H | T], CS, [H | R]) :-
+    sum_m(M, T, CS, R).
 
 % Rimuovi monomi con coefficiente zero
-rimuovi_zeri([], []).
-rimuovi_zeri([m(0, _, _) | T], R) :-
-    rimuovi_zeri(T, R).
-rimuovi_zeri([H | T], [H | R]) :-
-    rimuovi_zeri(T, R).
+remove_zeros([], []).
+remove_zeros([m(0, _, _) | T], R) :-
+    remove_zeros(T, R).
+remove_zeros([H | T], [H | R]) :-
+    remove_zeros(T, R).
 
 
 % Predicato principale per la sottrazione
-mvp_minus(poly(Monomi1), poly(Monomi2), poly(Result)) :-
-    inverti_segni(Monomi2, Monomi2Neg),
-    append(Monomi1, Monomi2Neg, MonomiTotali),
-    somma_monomi(MonomiTotali, MonomiCombinati),!,
-    rimuovi_zeri(MonomiCombinati, Result),!.
+mvp_minus(poly(M1), poly(M2), poly(Result)) :-
+    reverse_s(M2, M2Neg),
+    append(M1, M2Neg, MT),
+    sum_ms(MT, MC),!,
+    remove_zeros(MC, Result),!.
 
 % Inverti i segni dei coefficienti dei monomi
-inverti_segni([], []).
-inverti_segni([m(Coeff, TD, VP) | T], [m(CoeffNeg, TD, VP) | T1]) :-
-    CoeffNeg is -Coeff,
-    inverti_segni(T, T1).
+reverse_s([], []).
+reverse_s([m(C, TD, VP) | T], [m(CNeg, TD, VP) | T1]) :-
+    CNeg is -C,
+    reverse_s(T, T1).
 
 
-%NON FUNZIONA!
-% Predicato principale per la moltiplicazione tra polinomi
+
+
+% Predicato principale per la moltiplicazione di un polinomio con un monomio
+
+% Moltiplica ciascun monomio del polinomio con il monomio dato
+mvp_times_m(poly(Monomi), Monomio, poly(Result)) :-
+    moltiplica_monomi(Monomi, Monomio, Result).
+
+moltiplica_monomi([], _, []).
+moltiplica_monomi([m(Coeff1, TD1, VP1) | T], m(Coeff2, TD2, VP2), [m(Coeff, TD, VP) | R]) :-
+    Coeff is Coeff1 * Coeff2,
+    TD is TD1 + TD2,
+    append(VP1, VP2, VPList),
+    combina_var_powers(VPList, VP),
+    moltiplica_monomi(T, m(Coeff2, TD2, VP2), R).
+
+% Combina i var powers di due monomi (somma le potenze delle variabili uguali)
+combina_var_powers(VPList, Result) :-
+    combina_var_powers(VPList, [], Result).
+
+combina_var_powers([], Acc, Acc).
+combina_var_powers([v(D1, X) | T], Acc, Result) :-
+    ( select(v(D2, X), Acc, Rest) ->
+        D is D1 + D2,
+        combina_var_powers(T, [v(D, X) | Rest], Result)
+    ; combina_var_powers(T, [v(D1, X) | Acc], Result)
+    ).
+
+% Esempio di utilizzo:
+% ?- mvp_times_m(poly([m(-1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), m(-1, 1, [v(1, x)]), R).
+% R = poly([m(1, 2, [v(2, x)]), m(-1, 3, [v(2, x), v(1, y)])]).
+
+
+
+
+
+
+% Moltiplica due polinomi
 mvp_times(poly(Monomi1), poly(Monomi2), poly(Result)) :-
-    moltiplica_polinomi(Monomi1, Monomi2, Prodotti),
-    flatten(Prodotti, MonomiFlat),
-    somma_monomi(MonomiFlat, Result).
+    findall(m(Coeff, TD, VP),
+            (member(M1, Monomi1), member(M2, Monomi2),
+             moltiplica_due_monomi(M1, M2, m(Coeff, TD, VP))),
+            MonomiProdotti),
+    somma_monomi_simili(MonomiProdotti, Result).
 
-% Predicato principale per la moltiplicazione di un polinomio per un monomio
-mvp_times_m(poly(Monomi1), m(Coeff2, TD2, VP2), poly(Result)) :-
-    moltiplica_polinomio_monomio(Monomi1, m(Coeff2, TD2, VP2), Prodotti),
-    somma_monomi(Prodotti, Result).
-
-% Moltiplica ogni monomio del primo polinomio per ogni monomio del secondo polinomio
-moltiplica_polinomi([], _, []).
-moltiplica_polinomi([M1 | T1], Monomi2, Prodotti) :-
-    moltiplica_monomio_polinomio(M1, Monomi2, Prodotti1),
-    moltiplica_polinomi(T1, Monomi2, Prodotti2),
-    append(Prodotti1, Prodotti2, Prodotti).
-
-% Moltiplica un monomio per ogni monomio di un polinomio
-moltiplica_monomio_polinomio(_, [], []).
-moltiplica_monomio_polinomio(m(Coeff1, TD1, VP1), [m(Coeff2, TD2, VP2) | T], [m(ProdCoeff, ProdTD, ProdVP) | R]) :-
-    ProdCoeff is Coeff1 * Coeff2,
-    ProdTD is TD1 + TD2,
-    moltiplica_varpowers(VP1, VP2, ProdVP),
-    moltiplica_monomio_polinomio(m(Coeff1, TD1, VP1), T, R).
-
-% Moltiplica le varpowers di due monomi
-moltiplica_varpowers([], VP, VP).
-moltiplica_varpowers([v(D1, X) | VP1], VP2, [v(D, X) | VP]) :-
-    select(v(D2, X), VP2, VP2Rest),
-    D is D1 + D2,
-    moltiplica_varpowers(VP1, VP2Rest, VP).
-
-% Moltiplica ogni monomio del polinomio per il monomio dato
-moltiplica_polinomio_monomio([], _, []).
-moltiplica_polinomio_monomio([M | T], M2, [Prod | R]) :-
-    moltiplica_monomio_polinomio(M, [M2], [Prod]),
-    moltiplica_polinomio_monomio(T, M2, R).
-
-% Esempio di uso per mvp_times
-% ?- mvp_times(poly([m(1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), poly([m(2, 1, [v(1, x)]), m(3, 1, [v(1, y)])]), R).
-% R = poly([m(2, 2, [v(1, x)]), m(3, 3, [v(1, x), v(1, y)]), m(3, 3, [v(1, x), v(1, y)]), m(3, 4, [v(1, x), v(1, y)])]).
-
-% Esempio di uso per mvp_times_m
-% ?- mvp_times_m(poly([m(1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), m(2, 1, [v(1, x)]), R).
-% R = poly([m(2, 2, [v(1, x)]), m(2, 3, [v(1, x), v(1, y)])]).
+% Moltiplica due monomi
+moltiplica_due_monomi(m(Coeff1, TD1, VP1), m(Coeff2, TD2, VP2), m(Coeff, TD, VP)) :-
+    Coeff is Coeff1 * Coeff2,
+    TD is TD1 + TD2,
+    append(VP1, VP2, VPList),
+    combina_var_powers(VPList, VP).
 
 
+% Somma monomi simili (con la stessa combinazione di variabili e potenze)
+somma_monomi_simili(Monomi, Result) :-
+    somma_monomi_simili(Monomi, [], Result).
 
+somma_monomi_simili([], Acc, Acc).
+somma_monomi_simili([m(Coeff1, TD, VP) | T], Acc, Result) :-
+    ( select(m(Coeff2, TD, VP), Acc, Rest) ->
+        Coeff is Coeff1 + Coeff2,
+        somma_monomi_simili(T, [m(Coeff, TD, VP) | Rest], Result)
+    ; somma_monomi_simili(T, [m(Coeff1, TD, VP) | Acc], Result)
+    ).
 
+% Esempio di utilizzo:
+% ?- mvp_times_poly(poly([m(1, 1, [v(1, x)])]), poly([m(1, 1, [v(1, x)]), m(1, 1, [v(1, y)])]), R).
+% R = poly([m(1, 2, [v(2, x)]), m(1, 2, [v(1, x), v(1, y)])]).
