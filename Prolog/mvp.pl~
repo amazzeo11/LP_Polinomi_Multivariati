@@ -343,3 +343,56 @@ inverti_segni([], []).
 inverti_segni([m(Coeff, TD, VP) | T], [m(CoeffNeg, TD, VP) | T1]) :-
     CoeffNeg is -Coeff,
     inverti_segni(T, T1).
+
+
+
+% Predicato principale per la moltiplicazione tra polinomi
+mvp_times(poly(Monomi1), poly(Monomi2), poly(Result)) :-
+    moltiplica_polinomi(Monomi1, Monomi2, Prodotti),
+    flatten(Prodotti, MonomiFlat),
+    somma_monomi(MonomiFlat, Result).
+
+% Predicato principale per la moltiplicazione di un polinomio per un monomio
+mvp_times_m(poly(Monomi1), m(Coeff2, TD2, VP2), poly(Result)) :-
+    moltiplica_polinomio_monomio(Monomi1, m(Coeff2, TD2, VP2), Prodotti),
+    somma_monomi(Prodotti, Result).
+
+% Moltiplica ogni monomio del primo polinomio per ogni monomio del secondo polinomio
+moltiplica_polinomi([], _, []).
+moltiplica_polinomi([M1 | T1], Monomi2, Prodotti) :-
+    moltiplica_monomio_polinomio(M1, Monomi2, Prodotti1),
+    moltiplica_polinomi(T1, Monomi2, Prodotti2),
+    append(Prodotti1, Prodotti2, Prodotti).
+
+% Moltiplica un monomio per ogni monomio di un polinomio
+moltiplica_monomio_polinomio(_, [], []).
+moltiplica_monomio_polinomio(m(Coeff1, TD1, VP1), [m(Coeff2, TD2, VP2) | T], [m(ProdCoeff, ProdTD, ProdVP) | R]) :-
+    ProdCoeff is Coeff1 * Coeff2,
+    ProdTD is TD1 + TD2,
+    moltiplica_varpowers(VP1, VP2, ProdVP),
+    moltiplica_monomio_polinomio(m(Coeff1, TD1, VP1), T, R).
+
+% Moltiplica le varpowers di due monomi
+moltiplica_varpowers([], VP, VP).
+moltiplica_varpowers([v(D1, X) | VP1], VP2, [v(D, X) | VP]) :-
+    select(v(D2, X), VP2, VP2Rest),
+    D is D1 + D2,
+    moltiplica_varpowers(VP1, VP2Rest, VP).
+
+% Moltiplica ogni monomio del polinomio per il monomio dato
+moltiplica_polinomio_monomio([], _, []).
+moltiplica_polinomio_monomio([M | T], M2, [Prod | R]) :-
+    moltiplica_monomio_polinomio(M, [M2], [Prod]),
+    moltiplica_polinomio_monomio(T, M2, R).
+
+% Esempio di uso per mvp_times
+% ?- mvp_times(poly([m(1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), poly([m(2, 1, [v(1, x)]), m(3, 1, [v(1, y)])]), R).
+% R = poly([m(2, 2, [v(1, x)]), m(3, 3, [v(1, x), v(1, y)]), m(3, 3, [v(1, x), v(1, y)]), m(3, 4, [v(1, x), v(1, y)])]).
+
+% Esempio di uso per mvp_times_m
+% ?- mvp_times_m(poly([m(1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), m(2, 1, [v(1, x)]), R).
+% R = poly([m(2, 2, [v(1, x)]), m(2, 3, [v(1, x), v(1, y)])]).
+
+
+
+
