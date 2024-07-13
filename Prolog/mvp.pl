@@ -108,7 +108,7 @@ first_symbol(E, Symbol) :-
 total_degree(E, TotalDegree) :-
     decompose_m(E, Terms),
     extract_exp(Terms, Exp),
-    sum_list(Exp, TotalDegree).
+    ssum_list(Exp, TotalDegree).
 
 
 %%% scomponi/2:
@@ -149,9 +149,9 @@ extract_exp([_ | Rest], Exps) :-
 %%% somma_lista/2:
 %%% Calcola la somma degli elementi della lista
 
-sum_list([], 0).
-sum_list([H | T], Sum) :-
-    sum_list(T, Rest),
+ssum_list([], 0).
+ssum_list([H | T], Sum) :-
+    ssum_list(T, Rest),
     Sum is H + Rest.
 
 
@@ -192,9 +192,9 @@ decompose_p(E, Terms) :-
 decompose_p(E, Terms) :-
     E =.. [-, T1, T2],
     decompose_p(T1, T1s),
-    decompose_negative(T2, Term2Neg),
+    decompose_negative(T2, T2Neg),
     !,
-    append(T1s, Term2Neg, Terms).
+    append(T1s, T2Neg, Terms).
 
 % Regola per il caso base: il termine è un monomio
 decompose_p(E, [E]) :-
@@ -286,3 +286,18 @@ min_degree(poly([m(_,D,_)|_]), D).
 
 max_degree(poly(P), D):- sort(2,@>=,P,Ps), Ps = [m(_,D,_)|_].
 
+
+%da poly in tradizionale restituisce monomi in tradizionale
+monomials_t(P,M):-
+    decompose_p(P,Ms),
+    sort(1,@<,Ms,M).
+
+%da poly parser a lista var senza duplicati
+variables(poly(P),V) :-
+    maplist(extract_v, P, Ps),
+    flatten(Ps,Vs),
+    maplist(arg(2), Vs, D),
+    list_to_set(D,V).
+
+extract_v(m(_,_,V), Vs) :-
+    append([],V,Vs).

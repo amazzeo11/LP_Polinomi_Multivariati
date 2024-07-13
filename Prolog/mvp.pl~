@@ -108,7 +108,7 @@ first_symbol(E, Symbol) :-
 total_degree(E, TotalDegree) :-
     decompose_m(E, Terms),
     extract_exp(Terms, Exp),
-    sum_list(Exp, TotalDegree).
+    ssum_list(Exp, TotalDegree).
 
 
 %%% scomponi/2:
@@ -149,9 +149,9 @@ extract_exp([_ | Rest], Exps) :-
 %%% somma_lista/2:
 %%% Calcola la somma degli elementi della lista
 
-sum_list([], 0).
-sum_list([H | T], Sum) :-
-    sum_list(T, Rest),
+ssum_list([], 0).
+ssum_list([H | T], Sum) :-
+    ssum_list(T, Rest),
     Sum is H + Rest.
 
 
@@ -192,9 +192,9 @@ decompose_p(E, Terms) :-
 decompose_p(E, Terms) :-
     E =.. [-, T1, T2],
     decompose_p(T1, T1s),
-    decompose_negative(T2, Term2Neg),
+    decompose_negative(T2, T2Neg),
     !,
-    append(T1s, Term2Neg, Terms).
+    append(T1s, T2Neg, Terms).
 
 % Regola per il caso base: il termine è un monomio
 decompose_p(E, [E]) :-
@@ -209,15 +209,15 @@ decompose_p(E, [E]) :-
 % Funzione di supporto per negare i termini
 decompose_negative(E, NegTerms) :-
     E =.. [+, T1, T2],
-    scomponi_negativo(T1, T1Neg),
-    scomponi_negativo(T2, T2Neg),
+    decompose_negative(T1, T1Neg),
+    decompose_negative(T2, T2Neg),
     !,
     append(T1Neg, T2Neg, NegTerms).
 
 decompose_negative(E, NegTerms) :-
     E =.. [-, T1, T2],
-    scomponi_negativo(T1, T1Neg),
-    scomponi_p(T2, T2s),
+    decompose_negative(T1, T1Neg),
+    decompose_p(T2, T2s),
     !,
     append(T1Neg, T2s, NegTerms).
 
@@ -236,32 +236,32 @@ decompose_negative(E, [ENeg]) :-
     !.
 
 % Definizione del predicato principale per la stampa del polinomio
-pprint_polynomial(poly(Monomials)) :-
-    maplist(monomio_to_string, Monomials, Termini),
-    atomic_list_concat(Termini, ' + ', Polinomio),
-    writeln(Polinomio).
+pprint_polynomial(poly(M)) :-
+    maplist(m_to_string, M, Terms),
+    atomic_list_concat(Terms, ' + ', P),
+    writeln(P).
 
 % Conversione di un monomio in una stringa
-monomio_to_string(m(Coefficiente, _, Variabili), Term) :-
-    coeff_to_string(Coefficiente, CoeffString),
-    vars_to_string(Variabili, VarsString),
-    format(atom(Term), '~w~w', [CoeffString, VarsString]).
+m_to_string(m(C, _, V), Term) :-
+    c_to_string(C, Cs),
+    v_to_string(V, Vs),
+    format(atom(Term), '~w~w', [Cs, Vs]).
 
 % Conversione del coefficiente in stringa
-coeff_to_string(Coefficiente, '') :- Coefficiente =:= 1, !.
-coeff_to_string(Coefficiente, CoeffString) :-
-    number_string(Coefficiente, CoeffString).
+c_to_string(C, '') :- C =:= 1, !.
+c_to_string(C, Cs) :-
+    number_string(C, Cs).
 
 % Conversione delle variabili in stringa
-vars_to_string([], '').
-vars_to_string([v(Esponente, Nome) | Vars], VarsString) :-
-    ( Esponente =:= 1 ->
-        format(atom(Var), '~w', [Nome])
+v_to_string([], '').
+v_to_string([v(Exp, N) | V], Vs) :-
+    ( Exp =:= 1 ->
+        format(atom(V), '~w', [N])
     ;
-        format(atom(Var), '~w^~w', [Nome, Esponente])
+        format(atom(V), '~w^~w', [N, Exp])
     ),
-    vars_to_string(Vars, RestVarsString),
-    atom_concat(Var, RestVarsString, VarsString).
+    v_to_string(V, RestVs),
+    atom_concat(V, RestVs, Vs).
 
 
 
@@ -285,4 +285,34 @@ min_degree(poly([m(_,D,_)|_]), D).
 %max_degree/2:
 
 max_degree(poly(P), D):- sort(2,@>=,P,Ps), Ps = [m(_,D,_)|_].
+
+
+%da poly in tradizionale restituisce monomi in tradizionale
+monomials_t(P,M):-
+    decompose_p(P,Ms),
+    sort(1,@<,Ms,M).
+
+%da poly parser a var parsed
+variables(poly(P),V) :-
+    maplist(extract_v, P, Ps),
+    flatten(Ps,Vs),
+    maplist(arg(2), Vs, D),
+    list_to_set(D,V).
+
+extract_v(m(_,_,V), Vs) :-
+    append([],V,Vs).
+
+%da poly non parsed a var non parsed singole:
+variables_t(P,V) :-
+     decompose_p(P,Ps),
+  estrai_variabili(Ps,V).
+
+take_v(P,V):-
+    decompose_p(P,Ps),
+    maplist(solosy, Ps,V).
+
+solosy([P|Ps],S):-
+    \+integer(P),
+    append([],P,S),
+    solosy(Ps,S).
 
