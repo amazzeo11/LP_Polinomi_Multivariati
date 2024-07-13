@@ -53,7 +53,6 @@ is_zero(X) :-
 %%% as_monomial/2:
 %%% ordinamento in modo crescente per grado
 %%% con spareggio rispetto alle variabili
-
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
     integer(S),
@@ -79,6 +78,17 @@ as_monomial(E, m(C, T, V)) :-
     sort(2,@=<,Vs,Vps),
     V = Vps.
 
+as_monomial(E, m(C, T, V)) :-
+    first_symbol(E, S),
+    S = -,
+    C is -1,
+    grado_totale(E, GradoTotale),
+    !,
+    T is GradoTotale,
+    var_powers(E, Varpws),
+    sort(1,@>=,Varpws,Vs),
+    sort(2,@=<,Vs,Vps),
+    V = Vps.
 
 %%% first_symbol/2:
 %%% estrae il primo simbolo dall'espressione E
@@ -90,7 +100,6 @@ first_symbol(E, Symbol) :-
     E =.. [_ | Args],  % Decompose the term into functor and arguments
     Args = [FirstArg | _],  % Get the first argument,
     first_symbol(FirstArg, Symbol).  % Recursively find the first symbol
-
 
 
 %%% grado totale/2:
@@ -169,7 +178,7 @@ as_polynomial(E, poly(P)) :-
     scomponi_p(E,M),
     maplist(as_monomial, M, P).
 
-
+% Regola per l'addizione
 scomponi_p(E, Termini) :-
     E =.. [+, T1, T2],
     scomponi_p(T1, Term1),
@@ -177,18 +186,50 @@ scomponi_p(E, Termini) :-
     !,
     append(Term1, Term2, Termini).
 
+% Regola per la sottrazione
 scomponi_p(E, Termini) :-
     E =.. [-, T1, T2],
     scomponi_p(T1, Term1),
-    scomponi_p(T2, Term2),
-     !,
-    append(Term1, Term2, Termini).
+    scomponi_negativo(T2, Term2Neg),
+    !,
+    append(Term1, Term2Neg, Termini).
 
-
+% Regola per il caso base: il termine è un monomio
 scomponi_p(E, [E]) :-
-    E =.. [_ | _].
-
-
-scomponi_p(E, [E]) :-
-    atomic(E),write("ci entro"),
+    E =.. [_ | _],
     !.
+
+% Regola per il caso base: il termine è una costante
+scomponi_p(E, [E]) :-
+    atomic(E),
+    !.
+
+% Funzione di supporto per negare i termini
+scomponi_negativo(E, TerminiNeg) :-
+    E =.. [+, T1, T2],
+    scomponi_negativo(T1, Term1Neg),
+    scomponi_negativo(T2, Term2Neg),
+    !,
+    append(Term1Neg, Term2Neg, TerminiNeg).
+
+scomponi_negativo(E, TerminiNeg) :-
+    E =.. [-, T1, T2],
+    scomponi_negativo(T1, Term1Neg),
+    scomponi_p(T2, Term2),
+    !,
+    append(Term1Neg, Term2, TerminiNeg).
+
+scomponi_negativo(E, [ENeg]) :-
+    E =.. [Op, Coeff, Var],
+    (Op = * -> CoeffNeg is -Coeff, ENeg =.. [*, CoeffNeg, Var]
+    ; Op = ^ -> CoeffNeg is -1, ENeg =.. [*, CoeffNeg, E]
+    ; atomic(E) -> ENeg is -E
+    ; ENeg =.. [(-), E]
+    ),
+    !.
+
+scomponi_negativo(E, [ENeg]) :-
+    atomic(E),
+    ENeg is -E,
+    !.
+
