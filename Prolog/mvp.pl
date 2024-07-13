@@ -381,14 +381,18 @@ combina_var_powers([v(D1, X) | T], Acc, Result) :-
 
 
 
-
 % Moltiplica due polinomi
 mvp_times(poly(Monomi1), poly(Monomi2), poly(Result)) :-
     findall(m(Coeff, TD, VP),
             (member(M1, Monomi1), member(M2, Monomi2),
              moltiplica_due_monomi(M1, M2, m(Coeff, TD, VP))),
             MonomiProdotti),
-    somma_monomi_simili(MonomiProdotti, Result).
+    somma_monomi_simili(MonomiProdotti, MonomiSommati),
+    % Rimuove i monomi con coefficiente 0
+    exclude(zero_coeff, MonomiSommati, Result).
+
+% Verifica se un monomio ha coefficiente zero
+zero_coeff(m(Coeff, _, _)) :- Coeff =:= 0.
 
 % Moltiplica due monomi
 moltiplica_due_monomi(m(Coeff1, TD1, VP1), m(Coeff2, TD2, VP2), m(Coeff, TD, VP)) :-
@@ -398,9 +402,17 @@ moltiplica_due_monomi(m(Coeff1, TD1, VP1), m(Coeff2, TD2, VP2), m(Coeff, TD, VP)
     combina_var_powers(VPList, VP).
 
 
+
+% Ordina le variabili in ogni monomio per facilitare il confronto
+ordina_monomi([], []).
+ordina_monomi([m(Coeff, TD, VP) | T], [m(Coeff, TD, SortedVP) | SortedT]) :-
+    sort(2, @=<, VP, SortedVP),
+    ordina_monomi(T, SortedT).
+
 % Somma monomi simili (con la stessa combinazione di variabili e potenze)
 somma_monomi_simili(Monomi, Result) :-
-    somma_monomi_simili(Monomi, [], Result).
+    ordina_monomi(Monomi, MonomiOrdinati),
+    somma_monomi_simili(MonomiOrdinati, [], Result).
 
 somma_monomi_simili([], Acc, Acc).
 somma_monomi_simili([m(Coeff1, TD, VP) | T], Acc, Result) :-
@@ -411,5 +423,5 @@ somma_monomi_simili([m(Coeff1, TD, VP) | T], Acc, Result) :-
     ).
 
 % Esempio di utilizzo:
-% ?- mvp_times_poly(poly([m(1, 1, [v(1, x)])]), poly([m(1, 1, [v(1, x)]), m(1, 1, [v(1, y)])]), R).
-% R = poly([m(1, 2, [v(2, x)]), m(1, 2, [v(1, x), v(1, y)])]).
+% ?- mvp_times_poly(poly([m(-1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), poly([m(-1, 1, [v(1, x)]), m(3, 2, [v(1, x), v(1, y)])]), R).
+% R = poly([m(3, 4, [v(2, x), v(2, y)]), m(-4, 3, [v(2, x), v(1, y)]), m(1, 2, [v(2, x)])]).
