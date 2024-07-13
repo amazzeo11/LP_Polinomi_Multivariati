@@ -254,13 +254,13 @@ c_to_string(C, Cs) :-
 
 % Conversione delle variabili in stringa
 v_to_string([], '').
-v_to_string([v(Exp, N) | V], Vs) :-
+v_to_string([v(Exp, N) | Vars], Vs) :-
     ( Exp =:= 1 ->
         format(atom(V), '~w', [N])
     ;
         format(atom(V), '~w^~w', [N, Exp])
     ),
-    v_to_string(V, RestVs),
+    v_to_string(Vars, RestVs),
     atom_concat(V, RestVs, Vs).
 
 
@@ -292,7 +292,7 @@ monomials_t(P,M):-
     decompose_p(P,Ms),
     sort(1,@<,Ms,M).
 
-%da poly parser a var parsed
+%da poly parser a lista var senza duplicati
 variables(poly(P),V) :-
     maplist(extract_v, P, Ps),
     flatten(Ps,Vs),
@@ -302,17 +302,30 @@ variables(poly(P),V) :-
 extract_v(m(_,_,V), Vs) :-
     append([],V,Vs).
 
-%da poly non parsed a var non parsed singole:
-variables_t(P,V) :-
-     decompose_p(P,Ps),
-  estrai_variabili(Ps,V).
 
-take_v(P,V):-
-    decompose_p(P,Ps),
-    maplist(solosy, Ps,V).
 
-solosy([P|Ps],S):-
-    \+integer(P),
-    append([],P,S),
-    solosy(Ps,S).
+% Definizione del predicato principale
+mvp_plus(poly(Monomi1), poly(Monomi2), poly(Result)) :-
+    append(Monomi1, Monomi2, MonomiTotali),
+    combina_monomi(MonomiTotali, MonomiCombinati),
+    rimuovi_zeri(MonomiCombinati, Result).
 
+% Combina monomi con stesso TotalDegree e VarPowers
+combina_monomi([], []).
+combina_monomi([m(Coeff, TD, VP) | T], [m(CoeffS, TD, VP) | R]) :-
+    select(m(Coeff1, TD, VP), T, T1),
+    CoeffS is Coeff + Coeff1,
+    combina_monomi([m(CoeffS, TD, VP) | T1], R).
+combina_monomi([H | T], [H | R]) :-
+    combina_monomi(T, R).
+
+% Rimuovi monomi con coefficiente zero
+rimuovi_zeri([], []).
+rimuovi_zeri([m(0, _, _) | T], R) :-
+    rimuovi_zeri(T, R).
+rimuovi_zeri([H | T], [H | R]) :-
+    rimuovi_zeri(T, R).
+
+% Esempio di uso
+% ?- mvp_plus(poly([m(-4, 0, []), m(1, 5, [v(1, x), v(4, y)])]), poly([m(4, 0, []), m(1, 7, [v(3, s), v(3, t), v(1, y)])]), Result).
+% Result = poly([m(1, 5, [v(1, x), v(4, y)]), m(1, 7, [v(3, s), v(3, t), v(1, y)])]).
