@@ -303,21 +303,25 @@ extract_v(m(_,_,V), Vs) :-
     append([],V,Vs).
 
 
-
-% Definizione del predicato principale
+% Predicato principale
 mvp_plus(poly(Monomi1), poly(Monomi2), poly(Result)) :-
     append(Monomi1, Monomi2, MonomiTotali),
-    combina_monomi(MonomiTotali, MonomiCombinati),!,
+    somma_monomi(MonomiTotali, MonomiCombinati),!,
     rimuovi_zeri(MonomiCombinati, Result).
 
-% Combina monomi con stesso TotalDegree e VarPowers
-combina_monomi([], []).
-combina_monomi([m(Coeff, TD, VP) | T], [m(CoeffS, TD, VP) | R]) :-
-    select(m(Coeff1, TD, VP), T, T1),
-    CoeffS is Coeff + Coeff1,
-    combina_monomi([m(CoeffS, TD, VP) | T1], R).
-combina_monomi([H | T], [H | R]) :-
-    combina_monomi(T, R).
+% Somma monomi con lo stesso TotalDegree e VarPowers
+somma_monomi([], []).
+somma_monomi([m(Coeff, TD, VP) | T], [m(CoeffS, TD, VP) | R]) :-
+    somma_monomio(m(Coeff, TD, VP), T, CoeffS, T1),
+    somma_monomi(T1, R).
+
+% Somma un singolo monomio con quelli uguali nella lista
+somma_monomio(m(Coeff, _, _), [], Coeff, []).
+somma_monomio(m(Coeff, TD, VP), [m(Coeff1, TD, VP) | T], CoeffS, R) :-
+    CoeffS1 is Coeff + Coeff1,
+    somma_monomio(m(CoeffS1, TD, VP), T, CoeffS, R).
+somma_monomio(M, [H | T], CoeffS, [H | R]) :-
+    somma_monomio(M, T, CoeffS, R).
 
 % Rimuovi monomi con coefficiente zero
 rimuovi_zeri([], []).
@@ -325,7 +329,3 @@ rimuovi_zeri([m(0, _, _) | T], R) :-
     rimuovi_zeri(T, R).
 rimuovi_zeri([H | T], [H | R]) :-
     rimuovi_zeri(T, R).
-
-% Esempio di uso
-% ?- mvp_plus(poly([m(-4, 0, []), m(1, 5, [v(1, x), v(4, y)])]), poly([m(4, 0, []), m(1, 7, [v(3, s), v(3, t), v(1, y)])]), Result).
-% Result = poly([m(1, 5, [v(1, x), v(4, y)]), m(1, 7, [v(3, s), v(3, t), v(1, y)])]).
