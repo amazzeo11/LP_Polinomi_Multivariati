@@ -177,7 +177,8 @@ convert_vp(T, null) :-
 as_polynomial(E, poly(P)) :-
     scomponi_p(E,M),
     maplist(as_monomial, M, Ps),
-    sort(2,@>=,Ps,P).
+    sort(2,@=<,Ps,P).%%%ricontrolla sorting
+
 
 % Regola per l'addizione
 scomponi_p(E, Termini) :-
@@ -234,3 +235,11 @@ scomponi_negativo(E, [ENeg]) :-
     ENeg is -E,
     !.
 
+
+
+pprint_polynomial(poly(P)) :-
+    decompose_p(P,OP),write(OP).
+
+decompose_p([M|Ms],OP):-
+    append(OP,decompose_m(M),OPs),
+    decompose_p(Ms,OPs).

@@ -177,7 +177,8 @@ convert_vp(T, null) :-
 as_polynomial(E, poly(P)) :-
     scomponi_p(E,M),
     maplist(as_monomial, M, Ps),
-    sort(2,@=<,Ps,P).
+    sort(2,@=<,Ps,P).%%%ricontrolla sorting
+
 
 % Regola per l'addizione
 scomponi_p(E, Termini) :-
@@ -233,4 +234,38 @@ scomponi_negativo(E, [ENeg]) :-
     atomic(E),
     ENeg is -E,
     !.
+
+
+% Definizione della funzione principale
+pprint_polynomial(poly(Monomi), Ps) :-
+    maplist(monomio_to_string, Monomi, Termini),
+    atomic_list_concat(Termini, ' + ', Ps).
+
+% Conversione di un monomio in una stringa
+monomio_to_string(m(Coefficiente, Costante, Variabili), Term) :-
+    coeff_to_string(Coefficiente, CoeffString),
+    vars_to_string(Variabili, VarsString),
+    const_to_string(Costante, ConstString),
+    format(atom(Term), '~w~w~w', [CoeffString, VarsString, ConstString]).
+
+% Conversione del coefficiente in stringa
+coeff_to_string(Coefficiente, '') :- Coefficiente =:= 1, !.
+coeff_to_string(Coefficiente, CoeffString) :-
+    number_string(Coefficiente, CoeffString).
+
+% Conversione delle variabili in stringa
+vars_to_string([], '').
+vars_to_string([v(Esponente, Nome) | Vars], VarsString) :-
+    ( Esponente =:= 1 ->
+        format(atom(Var), '~w', [Nome])
+    ;
+        format(atom(Var), '~w^~w', [Nome, Esponente])
+    ),
+    vars_to_string(Vars, RestVarsString),
+    atom_concat(Var, RestVarsString, VarsString).
+
+% Conversione della costante in stringa
+const_to_string(0, '').
+const_to_string(Costante, ConstString) :-
+    number_string(Costante, ConstString).
 
