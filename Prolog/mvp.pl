@@ -176,7 +176,8 @@ convert_vp(T, null) :-
 
 as_polynomial(E, poly(P)) :-
     scomponi_p(E,M),
-    maplist(as_monomial, M, P).
+    maplist(as_monomial, M, Ps),
+    sort(2,@=<,Ps,P).
 
 % Regola per l'addizione
 scomponi_p(E, Termini) :-
