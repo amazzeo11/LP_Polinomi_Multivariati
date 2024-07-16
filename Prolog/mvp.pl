@@ -436,7 +436,7 @@ somma_monomi_simili([m(Coeff1, TD, VP) | T], Acc, Result) :-
 
 % Valutazione di un polinomio
 mvp_val(poly(Monomials), VariableValues, Value) :-
-    maplist(monomial_val(VariableValues), Monomials, Values),
+    maplist(monomial_val(VariableValues), Monomials, Values),!,
     sum_list2(Values, Value).
 
 % Valutazione di un monomio
