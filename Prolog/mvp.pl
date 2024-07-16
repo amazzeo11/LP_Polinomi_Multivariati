@@ -296,13 +296,16 @@ monomials_t(P,M):-
 %da poly parser a lista var senza duplicati
 variables(poly(P),V) :-
     maplist(extract_v, P, Ps),
-    flatten(Ps,Vs),
-    maplist(arg(2), Vs, D),
-    list_to_set(D,V).
+    flatten(Ps,V).
 
 extract_v(m(_,_,V), Vs) :-
     append([],V,Vs).
 
+%restituisce solo i simboli di variabili
+only_variables(poly(P),V) :-
+    variables(poly(P),Vs),
+    maplist(arg(2), Vs, D),
+    list_to_set(D,V).
 
 % Predicato principale
 mvp_plus(poly(M1), poly(M2), poly(Result)) :-
@@ -391,6 +394,8 @@ mvp_times(poly(Monomi1), poly(Monomi2), poly(Result)) :-
     somma_monomi_simili(MonomiProdotti, MonomiSommati),
     % Rimuove i monomi con coefficiente 0
     exclude(zero_coeff, MonomiSommati, Result).
+
+
 
 % Verifica se un monomio ha coefficiente zero
 zero_coeff(m(Coeff, _, _)) :- Coeff =:= 0.
