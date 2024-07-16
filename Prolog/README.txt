@@ -1,32 +1,36 @@
 Mazzeo	Alessia	899612
 
-La seguente descizione dei predicati implementati segue l'ordine fornito nella traccia.
-Per ogni funzione principale descritta vengono anche indicati i nomi delle funzioni di supporto che utilizza, i nomi di queste ultime sono in inglese per mantenere la coerenza implementativa con le funzioni principali.
-Infine sono indicate alcune funzioni implementate per gestire dei casi considerati ma non esplicitati nella traccia, oppure per incoerenze tracci.
+La seguente descrizione dei predicati implementati ricalca l'ordine fornito
+nella traccia.
+Per ogni funzione principale descritta vengono anche indicati i nomi delle 
+funzioni di supporto che utilizza. I nomi di queste ultime sono in inglese
+per mantenere la coerenza implementativa con le funzioni principali.
+Infine sono indicate alcune funzioni extra implementate durante lo sviluppo 
+del progetto al fine di coprire alcune ambiguità e gestire casi particolari.
 
 
-variabili:
-v(Exp, Var)
+Strutture di base:
 
+Variabili:  v(Exp, Var)
 Dove Exp è l'esponente associato al simbolo di variabile Var
 
 
-monomi:
-m(C,D,[V1, V2, …])
-
+Monomi:	 m(C,D,[V1, V2, …])
 Dove:
 - C è il coefficiente del monomio
 - D è il grado totale del monomio
-- V1, V2, … sono variabili nella forma sopra indicata
+- V1, V2, … sono variabili nella forma sopra esposta
 
 
-polinomi:
-poly([M1, M2, …])
-dove M1, M2, … sono monomi nella forma sopra specificata.
+Polinomi:  poly([M1, M2, …])
+Dove M1, M2, … sono monomi nella forma sopra specificata.
 
 
 Nelle descrizioni seguenti si assume che polinomi e monomi abbiano sempre
 la struttura sopra indicata, a meno di diversa indicazione.
+
+
+Predicati:
 
 1)is_zero/1:
 
@@ -42,7 +46,7 @@ ad esempio poly([m(0,0,[]), m(0,0,[]), m(0,0,[])]).
 2)coefficients/2:
 prende in input un polinomio nella forma poly([monomials]) ed estrae
 i coefficienti di ogni monomio con la funzione di supporto extract_coeff/2.
-I monomi sono da intendersi nella forma m(C,D,V).
+
 
 
 3)variables/2:
