@@ -32,7 +32,7 @@ la struttura sopra indicata, a meno di diversa indicazione.
 
 Predicati:
 
-1)is_zero/1:
+1) is_zero/1:
 
 il predicato is_zero(X) controlla che il polinomio o il monomio passati in 
 input siano una rappresentazione dello 0.
@@ -43,40 +43,68 @@ Sono intese come rappresentazioni dello zero:
 ad esempio poly([m(0,0,[]), m(0,0,[]), m(0,0,[])]).
 
 
-2)coefficients/2:
-prende in input un polinomio nella forma poly([monomials]) ed estrae
-i coefficienti di ogni monomio con la funzione di supporto extract_coeff/2.
+2) coefficients/2:
+prende in input un polinomio e restituisce una lista contente i
+coefficienti di ogni monomio, avvalendosi della funzione di 
+supporto extract_coeff/2 che estrae i coefficienti e li 
+concatena in una lista.
+
+
+3) variables/2:
+prende in input un polinomio e restituisce la lista delle
+variabili contenute in ogni monomio, avvalendosi della
+funzione di supporto extract_v che estrae le variabili
+e le concatena in una lista.
+E' stata implementata anche una funzione supplementare
+only_variables, vedasi la fine del file.
+
+
+4) monomials/2:
+prende in input un polinomio e restituisce la lista dei
+monomi che lo compongono.
+E' stata implementata anche una funzione supplementare
+monomials_t, vedasi la fine del file.
+
+
+5) max_degree/2:
+prende in input un polinomio e restituisce il grado massimo dei
+monomi che lo compongono, riordinando in maniera decrescente i
+monomi ed estraendo il grado del primo.
+
+6) min_degree/2:
+prende in input un polinomio e restituisce il grado del primo monomio
+presente avvalendosi del fatto che un polinomio parsato con la funzione
+as_polynomial ha i monomi ordinati in modo crescente rispetto al grado.
+
+
+7) mvp_plus/3:
+
+
+8) mvp_minus/3:
+
+
+9) mvp_times/3:
+
+
+10) as_monomial/2:
+
+
+11) as_polynomial/2:
+
+
+12) mvp_val/3:
+
+
+13) pprint_polynomial/1:
 
 
 
-3)variables/2:
+funzioni extra:
+- only_variables/2: prende in input un polinomio e restituisce
+una lista contenente una sola occorrenza di ogni simbolo di variabile
+presente.
 
 
-4)monomials/2:
-
-
-5)max_degree/2:
-
-
-6)min_degree/2:
-
-
-7)mvp_plus/3:
-
-
-8)mvp_minus/3:
-
-
-9)mvp_times/3:
-
-
-10)as_monomial/2:
-
-
-11)as_polynomial/2:
-
-
-12)mvp_val/3:
-
-
-13)pprint_polynomial/1:
+- monomials_t/2:
+prende in input un polinomio in forma tradizionale e restituisce i 
+monomi che lo compongono in forma tradizionale
