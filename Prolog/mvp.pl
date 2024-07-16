@@ -431,3 +431,33 @@ somma_monomi_simili([m(Coeff1, TD, VP) | T], Acc, Result) :-
 % Esempio di utilizzo:
 % ?- mvp_times_poly(poly([m(-1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), poly([m(-1, 1, [v(1, x)]), m(3, 2, [v(1, x), v(1, y)])]), R).
 % R = poly([m(3, 4, [v(2, x), v(2, y)]), m(-4, 3, [v(2, x), v(1, y)]), m(1, 2, [v(2, x)])]).
+
+
+
+% Valutazione di un polinomio
+mvp_val(poly(Monomials), VariableValues, Value) :-
+    maplist(monomial_val(VariableValues), Monomials, Values),
+    sum_list2(Values, Value).
+
+% Valutazione di un monomio
+monomial_val(VariableValues, m(Coeff, _, Vars), Value) :-
+    maplist(variable_val(VariableValues), Vars, VarValues),
+    product_list(VarValues, Product),
+    Value is Coeff * Product.
+
+% Trovare il valore di una variabile dalla lista di valori
+variable_val(VariableValues, v(Exponent, Var), Value) :-
+    member((Var, VarValue), VariableValues),
+    Value is VarValue ** Exponent.
+
+% Prodotto di una lista di numeri
+product_list(List, Product) :-
+    foldl(multiply, List, 1, Product).
+
+multiply(X, Y, Z) :- Z is X * Y.
+
+% Somma di una lista di numeri
+sum_list2(List, Sum) :-
+    foldl(plus, List, 0, Sum).
+
+plus(X, Y, Z) :- Z is X + Y.
