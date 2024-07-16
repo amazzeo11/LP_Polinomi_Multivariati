@@ -173,11 +173,12 @@ convert_vp(T, null) :-
     T =.. [_|_].
 
 
-
 as_polynomial(E, poly(P)) :-
     decompose_p(E,M),
-    maplist(as_monomial, M, Ps),
-    sort(2,@=<,Ps,P).%%%ricontrolla sorting
+    sort(1,@=<,M,Ms),
+    maplist(as_monomial, Ms, Ps),
+    sort(2,@=<,Ps,P).
+
 
 
 % Regola per l'addizione

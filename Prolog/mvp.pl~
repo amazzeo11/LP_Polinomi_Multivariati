@@ -173,11 +173,14 @@ convert_vp(T, null) :-
     T =.. [_|_].
 
 
-
 as_polynomial(E, poly(P)) :-
     decompose_p(E,M),
-    maplist(as_monomial, M, Ps),
-    sort(2,@=<,Ps,P).%%%ricontrolla sorting
+    sort(1,@=<,M,Ms),
+       write(Ms),
+
+    maplist(as_monomial, Ms, Ps),
+    sort(2,@=<,Ps,P).
+
 
 
 % Regola per l'addizione
@@ -382,7 +385,7 @@ combina_var_powers([v(D1, X) | T], Acc, Result) :-
 
 
 % Moltiplica due polinomi
-mvp_times_poly(poly(Monomi1), poly(Monomi2), poly(Result)) :-
+mvp_times(poly(Monomi1), poly(Monomi2), poly(Result)) :-
     findall(m(Coeff, TD, VP),
             (member(M1, Monomi1), member(M2, Monomi2),
              moltiplica_due_monomi(M1, M2, m(Coeff, TD, VP))),
