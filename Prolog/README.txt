@@ -2,10 +2,10 @@ Mazzeo	Alessia	899612
 
 La seguente descrizione dei predicati implementati ricalca l'ordine fornito
 nella traccia.
-Per ogni funzione principale descritta vengono anche indicati i nomi delle 
-funzioni di supporto che utilizza. I nomi di queste ultime sono in inglese
+Per ogni funzione principale descritta vengono anche indicati i nomi dei 
+predicati di supporto che utilizza. I nomi di questi ultimi sono in inglese
 per mantenere la coerenza implementativa con le funzioni principali.
-Infine sono indicate alcune funzioni extra implementate durante lo sviluppo 
+Infine sono indicate alcuni predicati extra implementati durante lo sviluppo 
 del progetto al fine di coprire alcune ambiguità e gestire casi particolari.
 
 
@@ -34,7 +34,7 @@ Predicati:
 
 1) is_zero/1:
 
-il predicato is_zero(X) controlla che il polinomio o il monomio passati in 
+Il predicato is_zero(X) controlla che il polinomio o il monomio passati in 
 input siano una rappresentazione dello 0.
 Sono intese come rappresentazioni dello zero:
 - i monomi nella forma m(0,0,[])
@@ -44,52 +44,56 @@ ad esempio poly([m(0,0,[]), m(0,0,[]), m(0,0,[])]).
 
 
 2) coefficients/2:
-prende in input un polinomio e restituisce una lista contente i
-coefficienti di ogni monomio, avvalendosi della funzione di 
-supporto extract_coeff/2 che estrae i coefficienti e li 
-concatena in una lista.
+Il predicato coefficients(Poly, Coefficients) è vero quando Coefficients
+è una lista contente i coefficienti di ogni monomio di Poly.
+Si avvale del predicato ausiliario extract_coeff/2 che estrae i coefficienti
+e li concatena in una lista.
 
 
 3) variables/2:
-prende in input un polinomio e restituisce la lista delle
-variabili contenute in ogni monomio, avvalendosi della
-funzione di supporto extract_v che estrae le variabili
+Il predicato variables(Poly, Variables) è vero quando Variables
+è una lista contente le variabili di ogni monomio di Poly.
+Si avvale del predicato di supporto extract_v che estrae le variabili
 e le concatena in una lista.
-E' stata implementata anche una funzione supplementare
-only_variables/2, vedasi la fine del file.
+E' stata implementata anche un predicato supplementare only_variables/2,
+vedasi sezione predicati_extra a fine file.
 
 
 4) monomials/2:
-prende in input un polinomio e restituisce la lista dei
-monomi che lo compongono.
+Il predicato monomials(Poly, Monomials) è vero quando Monomials
+è una lista contente i monomi che compongono Poly.
 E' stata implementata anche una funzione supplementare
-monomials_t/2, vedasi la fine del file.
+monomials_t/2, vedasi sezione predicati_extra a fine file.
 
 
 5) max_degree/2:
-prende in input un polinomio e restituisce il grado massimo dei
-monomi che lo compongono, riordinando in maniera decrescente i
-monomi ed estraendo il grado del primo.
+Il predicato max_degree(Poly, Degree) è vero quando Degree è il
+grado massimo dei monomi presenti in Poly.
+Riordina in maniera decrescente i monomi ed estrae il grado del primo.
 
 6) min_degree/2:
-prende in input un polinomio e restituisce il grado del primo monomio
-presente avvalendosi del fatto che un polinomio parsato con la funzione
-as_polynomial/2 ha i monomi ordinati in modo crescente rispetto al grado.
+Il predicato min_degree(Poly, Degree) è vero quando Degree è il
+grado minimo dei monomi presenti in Poly.
+Si avvale del fatto che un polinomio parsato con la funzione
+as_polynomial/2 ha i monomi ordinati in modo crescente rispetto al grado,
+per cui estrae il grado del primo monomio di Poly.
 
 
 7) mvp_plus/3:
-prende in input 2 polinomi e restituisce il polinomio derivante dalla somma
-dei due. Per farlo unisce i due polinomi in un'unica lista e somma i monomi 
+Il predicato mvp_plus(Poly1, Poly2, Result) è vero quando Result è il
+polinomio somma di Poly1 e Poly2.
+Unisce i due polinomi in un'unica lista e somma i monomi 
 di pari grado grazie alla funzione di supporto sum_ms/2 e sum_m/4.
 Una volta effettuata la somma rimuove i monomi con coefficiente uguale a 0
 utilizzando la funzione di supporto remove_zeros/2.
 
 8) mvp_minus/3:
-prende in input 2 polinomi e restituisce il polinomio derivante dalla 
-differenza dei due. Per farlo inverte i segni dei coefficienti di tutti i
-monomi del secondo polinomio con l'utilizzo della funzione di supporto 
-reverse_s e unisce i due polinomi in un'unica lista. A questo punto effettua
-la somma dei due polinomi come spora esposto. 
+Il predicato mvp_minus(Poly1, Poly2, Result) è vero quando Result è il
+polinomio differenza di Poly1 e Poly2.
+Inverte i segni dei coefficienti di tutti i monomi del secondo polinomio 
+con l'utilizzo della funzione di supporto reverse_s/2 e unisce i due polinomi
+in un'unica lista. A questo punto effettua la somma dei due polinomi 
+come spora esposto. 
 
 
 
@@ -97,8 +101,8 @@ la somma dei due polinomi come spora esposto.
 
 
 10) as_monomial/2:
-prende in input un monomio in forma tradizionale e restituisce un monomio
-in forma composta come esposto ad inizio file.
+Il predicato as_monomial(Expression, Monomial) è vero quando Monomial è il 
+monomio risultante dal parsing dell’espressione Expression.
 Il predicato si suddivide in 3 clausole che gestiscono i seguenti casi:
 - coefficiente esplicito -> C prende il valore rilevato
 - coefficiente non esplicito negativo -> C prende il valore di -1
@@ -118,6 +122,16 @@ vengono estratti con extract_exp/2.
 
 
 11) as_polynomial/2:
+Il predicato as_polynomial(Expression, Polynomial) è vero quando Polynomial
+è il polinomio risultante dal parsing dell’espressione Expression.
+Scompone l'espressione in singoli termini che costituiscono i 
+monomi, per farlo andiamo ad esaminare i simboli + e - presenti 
+nell'espressione tramite i predicati ausiliari decompose_p/2 e
+decompose_negative/2.
+Ogni termine viene parsato grazie alla funzione as_monomial sopra esposta ed
+infine i monomi parsati vengono ordinati in modo crescente per grado, con 
+spareggi in base alle variabili grazie ad un ordinamento alfabetico 
+antecedente al parsing.
 
 
 12) mvp_val/3:
@@ -133,6 +147,13 @@ complessivo del polinomio.
 
 
 13) pprint_polynomial/1:
+Il predicato pprint_polynomial(Polynomial), è vero quando stampa sullo 
+standard output il polinomio Polynomial in forma tradizionale.
+La lista di monomi di Polynomial viene convertita in una lista di termini
+sotto forma di stringhe con il predicato ausiliario m_to_string/2.
+Tale predicato analizza separatamente i casi di monomi con coefficiente
+positivo e negativo, per separarli correttamente con + o - nel polinomio
+risultante. A questo punto i termini vengono concatenati e stampati.
 
 
 

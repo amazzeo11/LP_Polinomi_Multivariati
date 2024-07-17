@@ -239,14 +239,22 @@ decompose_negative(E, [ENeg]) :-
 % Definizione del predicato principale per la stampa del polinomio
 pprint_polynomial(poly(M)) :-
     maplist(m_to_string, M, Terms),
-    atomic_list_concat(Terms, ' + ', P),
+    atomic_list_concat(Terms, '', P),
     writeln(P).
 
 % Conversione di un monomio in una stringa
+m_to_string(m(C, _D, V), Term) :-
+    c_to_string(C, Cs),
+    C>=0,!,
+    v_to_string(V, Vs),
+    format(atom(Term), '+~w~w', [Cs, Vs]).
+
 m_to_string(m(C, _, V), Term) :-
     c_to_string(C, Cs),
+    C<0,!,
     v_to_string(V, Vs),
     format(atom(Term), '~w~w', [Cs, Vs]).
+
 
 % Conversione del coefficiente in stringa
 c_to_string(C, '') :- C =:= 1, !.
@@ -436,7 +444,7 @@ somma_monomi_simili([m(Coeff1, TD, VP) | T], Acc, Result) :-
 
 % Valutazione di un polinomio
 mvp_val(poly(Monomials), VariableValues, Value) :-
-    maplist(monomial_val(VariableValues), Monomials, Values),
+    maplist(monomial_val(VariableValues), Monomials, Values),!,
     sum_list2(Values, Value).
 
 % Valutazione di un monomio

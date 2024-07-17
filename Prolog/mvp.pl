@@ -239,14 +239,22 @@ decompose_negative(E, [ENeg]) :-
 % Definizione del predicato principale per la stampa del polinomio
 pprint_polynomial(poly(M)) :-
     maplist(m_to_string, M, Terms),
-    atomic_list_concat(Terms, ' + ', P),
+    atomic_list_concat(Terms, '', P),
     writeln(P).
 
 % Conversione di un monomio in una stringa
+m_to_string(m(C, _D, V), Term) :-
+    c_to_string(C, Cs),
+    C>=0,!,
+    v_to_string(V, Vs),
+    format(atom(Term), '+~w~w', [Cs, Vs]).
+
 m_to_string(m(C, _, V), Term) :-
     c_to_string(C, Cs),
+    C<0,!,
     v_to_string(V, Vs),
     format(atom(Term), '~w~w', [Cs, Vs]).
+
 
 % Conversione del coefficiente in stringa
 c_to_string(C, '') :- C =:= 1, !.
@@ -377,11 +385,6 @@ combina_var_powers([v(D1, X) | T], Acc, Result) :-
     ; combina_var_powers(T, [v(D1, X) | Acc], Result)
     ).
 
-% Esempio di utilizzo:
-% ?- mvp_times_m(poly([m(-1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), m(-1, 1, [v(1, x)]), R).
-% R = poly([m(1, 2, [v(2, x)]), m(-1, 3, [v(2, x), v(1, y)])]).
-
-
 
 
 
@@ -428,9 +431,6 @@ somma_monomi_simili([m(Coeff1, TD, VP) | T], Acc, Result) :-
     ; somma_monomi_simili(T, [m(Coeff1, TD, VP) | Acc], Result)
     ).
 
-% Esempio di utilizzo:
-% ?- mvp_times_poly(poly([m(-1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), poly([m(-1, 1, [v(1, x)]), m(3, 2, [v(1, x), v(1, y)])]), R).
-% R = poly([m(3, 4, [v(2, x), v(2, y)]), m(-4, 3, [v(2, x), v(1, y)]), m(1, 2, [v(2, x)])]).
 
 
 
