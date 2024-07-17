@@ -123,33 +123,22 @@ decompose_negative(E, NegTerms) :-
     append(T1Neg, T2s, NegTerms).
 
 decompose_negative(E, [ENeg]) :-
-    E =.. [*, A, B],
-    decompose_negative(A, [ANeg]),
-    ENeg =.. [*, ANeg, B],
-    !.
-
-decompose_negative(E, [ENeg]) :-
-    E =.. [*, A, B],
-    decompose_negative(B, [BNeg]),
-    ENeg =.. [*, A, BNeg],
-    !.
-
-decompose_negative(E, [ENeg]) :-
-    E =.. [^, _, _],
-    ENeg =.. [*, -1, E], % This ensures that the exponentiation term is negated correctly
-    !.
-
-decompose_negative(E, [ENeg]) :-
-    atomic(E),
-    ( number(E) ->
-        ENeg is -E
-    ; ENeg = (-E)
+    E =.. [*, C, Var],
+    (number(C) ->
+        CNeg is -C,
+        ENeg =.. [*, CNeg, Var]
+    ;
+        ENeg =.. [*, -1, E]
     ),
     !.
 
 decompose_negative(E, [ENeg]) :-
-    E =.. [Var],
-    ENeg = (-Var),
+    atomic(E),
+    (number(E) ->
+        ENeg is -E
+    ;
+        ENeg =.. [*, -1, E]
+    ),
     !.
 
 %%% as_monomial/2:
@@ -166,7 +155,7 @@ as_monomial(E, m(C, T, V)) :-
     sort(2,@=<,Vs,Vps),
     V = Vps.
 
-%%% caso in cui il coefficiente del monomio non è esplicito
+%%%caso in cui il coefficiente del monomio non è esplicito
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
     \+integer(S),
@@ -262,6 +251,7 @@ convert_vp(T, v(1, T)) :-
 
 convert_vp(T, null) :-
     T =.. [_|_].
+
 
 
 % Definizione del predicato principale per la stampa del polinomio
@@ -452,8 +442,7 @@ zero_coeff(m(C, _, _)) :- C =:= 0.
 % Ordina le variabili in ogni monomio per facilitare il confronto
 sort_m([], []).
 sort_m([m(C, TD, VP) | T], [m(C, TD, SVP) | ST]) :-
-    sort(1,@>=,VP,Vs),
-    sort(2,@=<,Vs,SVP),
+    sort(2,@=<,VP,SVP),
 
     sort_m(T, ST).
 
