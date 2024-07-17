@@ -114,7 +114,7 @@ funzione di supporto first_symbol/2.
 La restante parte della funzione è comune alle 3 clausole:
 viene calcolato il grado totale del monomio con total_degree/2, vengono
 estratte le variabili con l'ausilio di var_powers/2 e vengono ordinate
-in modo crescente per esponente con spareggi determinati dalle variabili.
+in modo crescente lessicografico rispetto alle variabili.
 per analizzare gli esponenti delle variabili il monomio viene scomposto
 in singoli termini grazie alla funzione decompose_m/2, e gli esponenti 
 vengono estratti con extract_exp/2.

@@ -48,7 +48,98 @@ is_zero(X) :-
     X = poly(M),
     foreach(member(Y, M), is_zero(Y)).
 
+% Main predicate to convert an expression to polynomial form
+as_polynomial(E, poly(P)) :-
+    decompose_p(E, M),
+    maplist(as_monomial, M, Ps),
+    write('Monomi prima dell\'ordinamento: '), writeln(Ps),
+    predsort(compare_monomials, Ps, P),
+    write('Monomi dopo l\'ordinamento: '), writeln(P).
 
+% Function to compare monomials for sorting
+compare_monomials(Order, m(_, G1, V1), m(_, G2, V2)) :-
+    ( G1 < G2 ->
+        Order = <
+    ; G1 > G2 ->
+        Order = >
+    ; compare_variables(V1, V2, Order)
+    ).
+
+% Function to compare variables
+compare_variables([], [], =).
+compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
+    ( V1 @< V2 ->
+        Order = <
+    ; V1 @> V2 ->
+        Order = >
+    ; D1 < D2 ->
+        Order = <
+    ; D1 > D2 ->
+        Order = >
+    ; compare_variables(T1, T2, Order)
+    ).
+compare_variables([], [_|_], <).
+compare_variables([_|_], [], >).
+
+% Rule for addition
+decompose_p(E, Terms) :-
+    E =.. [+, T1, T2],
+    decompose_p(T1, Term1),
+    decompose_p(T2, Term2),
+    !,
+    append(Term1, Term2, Terms).
+
+% Rule for subtraction
+decompose_p(E, Terms) :-
+    E =.. [-, T1, T2],
+    decompose_p(T1, T1s),
+    decompose_negative(T2, T2Neg),
+    !,
+    append(T1s, T2Neg, Terms).
+
+% Rule for the base case: the term is a monomial
+decompose_p(E, [E]) :-
+    E =.. [_ | _],
+    !.
+
+% Rule for the base case: the term is a constant
+decompose_p(E, [E]) :-
+    atomic(E),
+    !.
+
+% Support function to negate terms
+decompose_negative(E, NegTerms) :-
+    E =.. [+, T1, T2],
+    decompose_negative(T1, T1Neg),
+    decompose_negative(T2, T2Neg),
+    !,
+    append(T1Neg, T2Neg, NegTerms).
+
+decompose_negative(E, NegTerms) :-
+    E =.. [-, T1, T2],
+    decompose_negative(T1, T1Neg),
+    decompose_p(T2, T2s),
+    !,
+    append(T1Neg, T2s, NegTerms).
+
+decompose_negative(E, [ENeg]) :-
+    E =.. [*, C, Var],
+    (number(C) ->
+        CNeg is -C,
+        ENeg =.. [*, CNeg, Var]
+    ;
+        ENeg =.. [*, -1, E]
+    ),
+    !.
+
+decompose_negative(E, [ENeg]) :-
+    atomic(E),
+    (number(E) ->
+        ENeg is -E
+    ;
+        ENeg =.. [*, -1, E]
+    ),
+    !.
 
 %%% as_monomial/2:
 %%% ordinamento in modo crescente per grado
@@ -60,8 +151,7 @@ as_monomial(E, m(C, T, V)) :-
     total_degree(E, TotalDegree),
     !,
     T is TotalDegree,
-    var_powers(E, Varpws),
-    sort(1,@>=,Varpws,Vs),
+    var_powers(E, Vs),
     sort(2,@=<,Vs,Vps),
     V = Vps.
 
@@ -73,8 +163,7 @@ as_monomial(E, m(C, T, V)) :-
     total_degree(E, TotalDegree),
     !,
     T is TotalDegree,
-    var_powers(E, Varpws),
-    sort(1,@>=,Varpws,Vs),
+    var_powers(E, Vs),
     sort(2,@=<,Vs,Vps),
     V = Vps.
 
@@ -85,14 +174,12 @@ as_monomial(E, m(C, T, V)) :-
     total_degree(E, TotalDegree),
     !,
     T is TotalDegree,
-    var_powers(E, Varpws),
-    sort(1,@>=,Varpws,Vs),
+    var_powers(E, Vs),
     sort(2,@=<,Vs,Vps),
     V = Vps.
 
 %%% first_symbol/2:
 %%% estrae il primo simbolo dall'espressione E
-
 first_symbol(E, E) :-
     (number(E); atom(E)), !.
 
@@ -101,19 +188,15 @@ first_symbol(E, Symbol) :-
     Args = [First | _],  % Get the first argument,
     first_symbol(First, Symbol).  % Recursively find the first symbol
 
-
 %%% grado totale/2:
 %%% calcola il grado complessivo del monomio
-
 total_degree(E, TotalDegree) :-
     decompose_m(E, Terms),
     extract_exp(Terms, Exp),
     ssum_list(Exp, TotalDegree).
 
-
 %%% scomponi/2:
 %%% Scompone il monomio in termini singoli
-
 decompose_m(E, [E]) :-
     atomic(E),
     !.
@@ -128,10 +211,8 @@ decompose_m(E, Terms) :-
 decompose_m(E, [E]) :-
     E =.. [_ | _].
 
-
 %%% estrai_esponenti/2:
 %%% Estrae gli esponenti delle variabili dai singoli termini
-
 extract_exp([], []).
 extract_exp([E | Rest], [1 | Exp]) :-
     atomic(E),
@@ -148,115 +229,30 @@ extract_exp([_ | Rest], Exps) :-
 
 %%% somma_lista/2:
 %%% Calcola la somma degli elementi della lista
-
 ssum_list([], 0).
 ssum_list([H | T], Sum) :-
     ssum_list(T, Rest),
     Sum is H + Rest.
 
-
+%%% var_powers/2:
+%%% Estrae le variabili con i loro esponenti
 var_powers(E, V) :-
     decompose_m(E, E1),
     maplist(convert_vp, E1, V1),
     !,
     exclude(==(null), V1, V).
 
-
 convert_vp(T, v(Exp, S)) :-
     T =.. [^, S, Exp].
 
 convert_vp(T, v(1, T)) :-
     atomic(T),
-   \+integer(T).
+    \+ integer(T).
 
 convert_vp(T, null) :-
     T =.. [_|_].
 
 
-% Predicato principale
-as_polynomial(E, poly(P)) :-
-    decompose_p(E,M),
-    maplist(as_monomial, M, Ps),
-    predsort(compare_monomials, Ps, P).
-
-% Funzione di confronto personalizzata per ordinare i monomi
-compare_monomials(Order, m(_, G1, V1), m(_, G2, V2)) :-
-    ( G1 < G2 ->
-        Order = <
-    ; G1 > G2 ->
-        Order = >
-    ; compare_variables(V1, V2, Order)
-    ).
-
-% Funzione di confronto per le variabili
-compare_variables([], [], =) :- !.
-compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
-    ( V1 @< V2 ->
-        Order = <
-    ; V1 @> V2 ->
-        Order = >
-    ; D1 < D2 ->
-        Order = <
-    ; D1 > D2 ->
-        Order = >
-    ; compare_variables(T1, T2, Order)
-    ).
-
-
-%Regola per l'addizione
-decompose_p(E, Terms) :-
-    E =.. [+, T1, T2],
-    decompose_p(T1, Term1),
-    decompose_p(T2, Term2),
-    !,
-    append(Term1, Term2, Terms).
-
-% Regola per la sottrazione
-decompose_p(E, Terms) :-
-    E =.. [-, T1, T2],
-    decompose_p(T1, T1s),
-    decompose_negative(T2, T2Neg),
-    !,
-    append(T1s, T2Neg, Terms).
-
-% Regola per il caso base: il termine è un monomio
-decompose_p(E, [E]) :-
-    E =.. [_ | _],
-    !.
-
-% Regola per il caso base: il termine è una costante
-decompose_p(E, [E]) :-
-    atomic(E),
-    !.
-
-% Funzione di supporto per negare i termini
-decompose_negative(E, NegTerms) :-
-    E =.. [+, T1, T2],
-    decompose_negative(T1, T1Neg),
-    decompose_negative(T2, T2Neg),
-    !,
-    append(T1Neg, T2Neg, NegTerms).
-
-decompose_negative(E, NegTerms) :-
-    E =.. [-, T1, T2],
-    decompose_negative(T1, T1Neg),
-    decompose_p(T2, T2s),
-    !,
-    append(T1Neg, T2s, NegTerms).
-
-decompose_negative(E, [ENeg]) :-
-    E =.. [Op, C, Var],
-    (Op = * -> CNeg is -C, ENeg =.. [*, CNeg, Var]
-    ; Op = ^ -> CNeg is -1, ENeg =.. [*, CNeg, E]
-    ; atomic(E) -> ENeg is -E
-    ; ENeg =.. [(-), E]
-    ),
-    !.
-
-decompose_negative(E, [ENeg]) :-
-    atomic(E),
-    ENeg is -E,
-    !.
 
 % Definizione del predicato principale per la stampa del polinomio
 pprint_polynomial(poly(M)) :-
