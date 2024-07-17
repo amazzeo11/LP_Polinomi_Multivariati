@@ -8,7 +8,7 @@
 is_monomial(m(_C, TD, VPs)) :-
     integer(TD),
     TD >= 0,
-    is_list(VPs).
+    is_list(VPs),foreach(member(V, VPs), is_varpower(V)).
 
 
 
@@ -31,15 +31,15 @@ is_polynomial(poly(Monomials)) :-
 
 
 %%%is_zero/1:
-%is_zero([]):- !.
-%
+is_zero([]):- !.
+
 is_zero(X) :-
     is_monomial(X),
     X = m(0, 0, []),
     !.
 
-%is_zero(m(C, _, _)) :-
- %   C =:= 0.
+is_zero(m(C, _, _)) :-
+ C =:= 0.
 
 is_zero(poly([])):- !.
 
@@ -48,15 +48,17 @@ is_zero(X) :-
     X = poly(M),
     foreach(member(Y, M), is_zero(Y)).
 
-% Main predicate to convert an expression to polynomial form
+
+
+%as_polynomial/2:
+
 as_polynomial(E, poly(P)) :-
     decompose_p(E, M),
     maplist(as_monomial, M, Ps),
-    write('Monomi prima dell\'ordinamento: '), writeln(Ps),
-    predsort(compare_monomials, Ps, P),
-    write('Monomi dopo l\'ordinamento: '), writeln(P).
+    %write('Monomi prima dell\'ordinamento: '), writeln(Ps),
+    predsort(compare_monomials, Ps, P).
+   % write('Monomi dopo l\'ordinamento: '), writeln(P).
 
-% Function to compare monomials for sorting
 compare_monomials(Order, m(_, G1, V1), m(_, G2, V2)) :-
     ( G1 < G2 ->
         Order = <
@@ -65,7 +67,6 @@ compare_monomials(Order, m(_, G1, V1), m(_, G2, V2)) :-
     ; compare_variables(V1, V2, Order)
     ).
 
-% Function to compare variables
 compare_variables([], [], =).
 compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
     ( V1 @< V2 ->
@@ -81,7 +82,6 @@ compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
 compare_variables([], [_|_], <).
 compare_variables([_|_], [], >).
 
-% Rule for addition
 decompose_p(E, Terms) :-
     E =.. [+, T1, T2],
     decompose_p(T1, Term1),
@@ -89,7 +89,6 @@ decompose_p(E, Terms) :-
     !,
     append(Term1, Term2, Terms).
 
-% Rule for subtraction
 decompose_p(E, Terms) :-
     E =.. [-, T1, T2],
     decompose_p(T1, T1s),
@@ -97,17 +96,14 @@ decompose_p(E, Terms) :-
     !,
     append(T1s, T2Neg, Terms).
 
-% Rule for the base case: the term is a monomial
 decompose_p(E, [E]) :-
     E =.. [_ | _],
     !.
 
-% Rule for the base case: the term is a constant
 decompose_p(E, [E]) :-
     atomic(E),
     !.
 
-% Support function to negate terms
 decompose_negative(E, NegTerms) :-
     E =.. [+, T1, T2],
     decompose_negative(T1, T1Neg),
@@ -141,9 +137,8 @@ decompose_negative(E, [ENeg]) :-
     ),
     !.
 
+
 %%% as_monomial/2:
-%%% ordinamento in modo crescente per grado
-%%% con spareggio rispetto alle variabili
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
     integer(S),
@@ -155,7 +150,6 @@ as_monomial(E, m(C, T, V)) :-
     sort(2,@=<,Vs,Vps),
     V = Vps.
 
-%%%caso in cui il coefficiente del monomio non è esplicito
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
     \+integer(S),
@@ -178,25 +172,21 @@ as_monomial(E, m(C, T, V)) :-
     sort(2,@=<,Vs,Vps),
     V = Vps.
 
-%%% first_symbol/2:
-%%% estrae il primo simbolo dall'espressione E
 first_symbol(E, E) :-
     (number(E); atom(E)), !.
 
 first_symbol(E, Symbol) :-
-    E =.. [_ | Args],  % Decompose the term into functor and arguments
-    Args = [First | _],  % Get the first argument,
-    first_symbol(First, Symbol).  % Recursively find the first symbol
+    E =.. [_ | Args],
+    Args = [First | _],
+    first_symbol(First, Symbol).
 
-%%% grado totale/2:
-%%% calcola il grado complessivo del monomio
+
 total_degree(E, TotalDegree) :-
     decompose_m(E, Terms),
     extract_exp(Terms, Exp),
     ssum_list(Exp, TotalDegree).
 
-%%% scomponi/2:
-%%% Scompone il monomio in termini singoli
+
 decompose_m(E, [E]) :-
     atomic(E),
     !.
@@ -211,8 +201,6 @@ decompose_m(E, Terms) :-
 decompose_m(E, [E]) :-
     E =.. [_ | _].
 
-%%% estrai_esponenti/2:
-%%% Estrae gli esponenti delle variabili dai singoli termini
 extract_exp([], []).
 extract_exp([E | Rest], [1 | Exp]) :-
     atomic(E),
@@ -227,15 +215,11 @@ extract_exp([_^Exp | Rest], [Exp | Exps]) :-
 extract_exp([_ | Rest], Exps) :-
     extract_exp(Rest, Exps).
 
-%%% somma_lista/2:
-%%% Calcola la somma degli elementi della lista
 ssum_list([], 0).
 ssum_list([H | T], Sum) :-
     ssum_list(T, Rest),
     Sum is H + Rest.
 
-%%% var_powers/2:
-%%% Estrae le variabili con i loro esponenti
 var_powers(E, V) :-
     decompose_m(E, E1),
     maplist(convert_vp, E1, V1),
@@ -254,13 +238,12 @@ convert_vp(T, null) :-
 
 
 
-% Definizione del predicato principale per la stampa del polinomio
+%%%pprint_polynomial/1
 pprint_polynomial(poly(M)) :-
     maplist(m_to_string, M, Terms),
     atomic_list_concat(Terms, '', P),
     writeln(P).
 
-% Conversione di un monomio in una stringa
 m_to_string(m(C, _D, V), Term) :-
     c_to_string(C, Cs),
     C>=0,!,
@@ -274,12 +257,10 @@ m_to_string(m(C, _, V), Term) :-
     format(atom(Term), '~w~w', [Cs, Vs]).
 
 
-% Conversione del coefficiente in stringa
 c_to_string(C, '') :- C =:= 1, !.
 c_to_string(C, Cs) :-
     number_string(C, Cs).
 
-% Conversione delle variabili in stringa
 v_to_string([], '').
 v_to_string([v(Exp, N) | Vars], Vs) :-
     ( Exp =:= 1 ->
@@ -300,26 +281,22 @@ extract_coeff(m(C,_,_), Cs) :-
     append([],C,Cs).
 
 
-%monomials/2:
-
+%%%monomials/2:
 monomials(poly(P), P).
 
 
-%min_degree/2:
-%
+%%%min_degree/2:
 min_degree(poly([m(_,D,_)|_]), D).
 
-%max_degree/2:
-
+%%%max_degree/2:
 max_degree(poly(P), D):- sort(2,@>=,P,Ps), Ps = [m(_,D,_)|_].
 
 
-%da poly in tradizionale restituisce monomi in tradizionale
 monomials_t(P,M):-
     decompose_p(P,Ms),
     sort(1,@<,Ms,M).
 
-%da poly parser a lista var senza duplicati
+%%%variables/2:
 variables(poly(P),V) :-
     maplist(extract_v, P, Ps),
     flatten(Ps,V).
@@ -327,25 +304,22 @@ variables(poly(P),V) :-
 extract_v(m(_,_,V), Vs) :-
     append([],V,Vs).
 
-%restituisce solo i simboli di variabili
 only_variables(poly(P),V) :-
     variables(poly(P),Vs),
     maplist(arg(2), Vs, D),
     list_to_set(D,V).
 
-% Predicato principale
+%%%mvp_plus/3:
 mvp_plus(poly(M1), poly(M2), poly(Result)) :-
     append(M1, M2, Ms),
     sum_ms(Ms, Mc),!,
     remove_zeros(Mc, Result).
 
-% Somma monomi con lo stesso TotalDegree e VarPowers
 sum_ms([], []).
 sum_ms([m(C, TD, VP) | T], [m(CS, TD, VP) | R]) :-
     sum_m(m(C, TD, VP), T, CS, T1),
     sum_ms(T1, R).
 
-% Somma un singolo monomio con quelli uguali nella lista
 sum_m(m(C, _, _), [], C, []).
 sum_m(m(C, TD, VP), [m(C1, TD, VP) | T], CS, R) :-
     CS1 is C + C1,
@@ -353,7 +327,6 @@ sum_m(m(C, TD, VP), [m(C1, TD, VP) | T], CS, R) :-
 sum_m(M, [H | T], CS, [H | R]) :-
     sum_m(M, T, CS, R).
 
-% Rimuovi monomi con coefficiente zero
 remove_zeros([], []).
 remove_zeros([m(0, _, _) | T], R) :-
     remove_zeros(T, R).
@@ -361,14 +334,13 @@ remove_zeros([H | T], [H | R]) :-
     remove_zeros(T, R).
 
 
-% Predicato principale per la sottrazione
+%%%mvp_minus/3:
 mvp_minus(poly(M1), poly(M2), poly(Result)) :-
     reverse_s(M2, M2Neg),
     append(M1, M2Neg, MT),
     sum_ms(MT, MC),!,
     remove_zeros(MC, Result),!.
 
-% Inverti i segni dei coefficienti dei monomi
 reverse_s([], []).
 reverse_s([m(C, TD, VP) | T], [m(CNeg, TD, VP) | T1]) :-
     CNeg is -C,
@@ -377,32 +349,43 @@ reverse_s([m(C, TD, VP) | T], [m(CNeg, TD, VP) | T1]) :-
 
 
 
-% Predicato principale per la moltiplicazione di un polinomio con un monomio
 
-% Moltiplica due polinomi
+%%%mvp_times/3:
 mvp_times(poly(Monomi1), poly(Monomi2), poly(Result_sorted)) :-
     findall(m(Coeff, TD, VP),
             (member(M1, Monomi1), member(M2, Monomi2),
              mvp_times(M1, M2, m(Coeff, TD, VP))),
             MonomiProdotti),!,
     sum_like_m(MonomiProdotti, MonomiSommati),
-    % Rimuove i monomi con coefficiente 0
     exclude(zero_coeff, MonomiSommati, Result),
      predsort(compare_monomials, Result, Result_sorted).
 
 
-mvp_times(poly(Monomi), m(C,D,V), poly(Result)) :-
-    moltiplica_monomi(Monomi, m(C,D,V), Result).
+mvp_times(poly(Monomi1), Monomio, poly(Result_sorted)) :-
+    findall(m(Coeff, TD, VP),
+            (member(M1, Monomi1),
+             mvp_times(M1, Monomio, m(Coeff, TD, VP))),
+            MonomiProdotti),!,
+    sum_like_m(MonomiProdotti, MonomiSommati),
+    exclude(zero_coeff, MonomiSommati, Result),
+    predsort(compare_monomials, Result, Result_sorted).
+
+mvp_times(Monomio, poly(Monomi2), poly(Result_sorted)) :-
+    findall(m(Coeff, TD, VP),
+            (member(M2, Monomi2),
+             mvp_times(Monomio, M2, m(Coeff, TD, VP))),
+            MonomiProdotti),!,
+    sum_like_m(MonomiProdotti, MonomiSommati),
+    exclude(zero_coeff, MonomiSommati, Result),
+    predsort(compare_monomials, Result, Result_sorted).
 
 
-% Moltiplica due monomi
 mvp_times(m(C1, TD1, VP1), m(C2, TD2, VP2), m(C, TD, VP)) :-
     C is C1 * C2,
     TD is TD1 + TD2,
     append(VP1, VP2, VPs),
     comb_var(VPs, VP).
 
-% Moltiplica ciascun monomio del polinomio con il monomio dato
 moltiplica_monomi([], _, []).
 moltiplica_monomi([m(C1, TD1, VP1) | T], m(C2, TD2, VP2), [m(C, TD, VP) | R]) :-
     C is C1 * C2,
@@ -411,7 +394,6 @@ moltiplica_monomi([m(C1, TD1, VP1) | T], m(C2, TD2, VP2), [m(C, TD, VP) | R]) :-
     comb_var(VPList, VP),
     moltiplica_monomi(T, m(C2, TD2, VP2), R).
 
-% Combina i var powers di due monomi (somma le potenze delle variabili uguali)
 comb_var(VPList, Result) :-
     comb_var(VPList, [], Result).
 
@@ -436,11 +418,8 @@ sum_like_m([m(Coeff1, TD, VP) | T], Acc, Result) :-
     ).
 
 
-% Verifica se un monomio ha coefficiente zero
 zero_coeff(m(C, _, _)) :- C =:= 0.
 
-
-% Ordina le variabili in ogni monomio per facilitare il confronto
 sort_m([], []).
 sort_m([m(C, TD, VP) | T], [m(C, TD, SVP) | ST]) :-
     sort(2,@=<,VP,SVP),
@@ -448,18 +427,17 @@ sort_m([m(C, TD, VP) | T], [m(C, TD, SVP) | ST]) :-
 
 
 
-% Valutazione di un polinomio
+%%%mvp_val/3:
 mvp_val(poly(Monomials), VariableValues, Value) :-
-    maplist(monomial_val(VariableValues), Monomials, Values),  % Valuta i monomi
-    ssum_list(Values, Value).  % Somma dei valori dei monomi
+    is_polynomial(poly(Monomials)),
+    maplist(monomial_val(VariableValues), Monomials, Values),
+    ssum_list(Values, Value).
 
-% Valutazione di un monomio
 monomial_val(VariableValues, m(Coeff, _, Vars), Value) :-
     maplist(variable_val(VariableValues), Vars, VarValues),!,
     product_list(VarValues, Product),
     Value is Coeff * Product.
 
-% Trovare il valore di una variabile dalla lista di valori
 variable_val(VariableValues, v(Exponent, Var), Value) :-
     member((Var, VarValue), VariableValues),
     Value is VarValue ** Exponent.
