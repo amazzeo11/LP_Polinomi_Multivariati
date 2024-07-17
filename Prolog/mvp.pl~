@@ -385,11 +385,6 @@ combina_var_powers([v(D1, X) | T], Acc, Result) :-
     ; combina_var_powers(T, [v(D1, X) | Acc], Result)
     ).
 
-% Esempio di utilizzo:
-% ?- mvp_times_m(poly([m(-1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), m(-1, 1, [v(1, x)]), R).
-% R = poly([m(1, 2, [v(2, x)]), m(-1, 3, [v(2, x), v(1, y)])]).
-
-
 
 
 
@@ -397,7 +392,7 @@ combina_var_powers([v(D1, X) | T], Acc, Result) :-
 mvp_times(poly(Monomi1), poly(Monomi2), poly(Result)) :-
     findall(m(Coeff, TD, VP),
             (member(M1, Monomi1), member(M2, Monomi2),
-             moltiplica_due_monomi(M1, M2, m(Coeff, TD, VP))),
+             mvp_times(M1, M2, m(Coeff, TD, VP))),
             MonomiProdotti),
     somma_monomi_simili(MonomiProdotti, MonomiSommati),
     % Rimuove i monomi con coefficiente 0
@@ -405,16 +400,16 @@ mvp_times(poly(Monomi1), poly(Monomi2), poly(Result)) :-
 
 
 
-% Verifica se un monomio ha coefficiente zero
-zero_coeff(m(Coeff, _, _)) :- Coeff =:= 0.
 
 % Moltiplica due monomi
-moltiplica_due_monomi(m(Coeff1, TD1, VP1), m(Coeff2, TD2, VP2), m(Coeff, TD, VP)) :-
+mvp_times(m(Coeff1, TD1, VP1), m(Coeff2, TD2, VP2), m(Coeff, TD, VP)) :-
     Coeff is Coeff1 * Coeff2,
     TD is TD1 + TD2,
     append(VP1, VP2, VPList),
     combina_var_powers(VPList, VP).
 
+% Verifica se un monomio ha coefficiente zero
+zero_coeff(m(Coeff, _, _)) :- Coeff =:= 0.
 
 
 % Ordina le variabili in ogni monomio per facilitare il confronto
@@ -436,9 +431,6 @@ somma_monomi_simili([m(Coeff1, TD, VP) | T], Acc, Result) :-
     ; somma_monomi_simili(T, [m(Coeff1, TD, VP) | Acc], Result)
     ).
 
-% Esempio di utilizzo:
-% ?- mvp_times_poly(poly([m(-1, 1, [v(1, x)]), m(1, 2, [v(1, x), v(1, y)])]), poly([m(-1, 1, [v(1, x)]), m(3, 2, [v(1, x), v(1, y)])]), R).
-% R = poly([m(3, 4, [v(2, x), v(2, y)]), m(-4, 3, [v(2, x), v(1, y)]), m(1, 2, [v(2, x)])]).
 
 
 

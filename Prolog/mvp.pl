@@ -392,7 +392,7 @@ combina_var_powers([v(D1, X) | T], Acc, Result) :-
 mvp_times(poly(Monomi1), poly(Monomi2), poly(Result)) :-
     findall(m(Coeff, TD, VP),
             (member(M1, Monomi1), member(M2, Monomi2),
-             moltiplica_due_monomi(M1, M2, m(Coeff, TD, VP))),
+             mvp_times(M1, M2, m(Coeff, TD, VP))),
             MonomiProdotti),
     somma_monomi_simili(MonomiProdotti, MonomiSommati),
     % Rimuove i monomi con coefficiente 0
@@ -400,16 +400,16 @@ mvp_times(poly(Monomi1), poly(Monomi2), poly(Result)) :-
 
 
 
-% Verifica se un monomio ha coefficiente zero
-zero_coeff(m(Coeff, _, _)) :- Coeff =:= 0.
 
 % Moltiplica due monomi
-moltiplica_due_monomi(m(Coeff1, TD1, VP1), m(Coeff2, TD2, VP2), m(Coeff, TD, VP)) :-
+mvp_times(m(Coeff1, TD1, VP1), m(Coeff2, TD2, VP2), m(Coeff, TD, VP)) :-
     Coeff is Coeff1 * Coeff2,
     TD is TD1 + TD2,
     append(VP1, VP2, VPList),
     combina_var_powers(VPList, VP).
 
+% Verifica se un monomio ha coefficiente zero
+zero_coeff(m(Coeff, _, _)) :- Coeff =:= 0.
 
 
 % Ordina le variabili in ogni monomio per facilitare il confronto
@@ -437,7 +437,7 @@ somma_monomi_simili([m(Coeff1, TD, VP) | T], Acc, Result) :-
 % Valutazione di un polinomio
 mvp_val(poly(Monomials), VariableValues, Value) :-
     maplist(monomial_val(VariableValues), Monomials, Values),!,
-    sum_list2(Values, Value).
+    ssum_list(Values, Value).
 
 % Valutazione di un monomio
 monomial_val(VariableValues, m(Coeff, _, Vars), Value) :-
@@ -455,9 +455,3 @@ product_list(List, Product) :-
     foldl(multiply, List, 1, Product).
 
 multiply(X, Y, Z) :- Z is X * Y.
-
-% Somma di una lista di numeri
-sum_list2(List, Sum) :-
-    foldl(plus, List, 0, Sum).
-
-plus(X, Y, Z) :- Z is X + Y.
