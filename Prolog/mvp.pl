@@ -173,11 +173,34 @@ convert_vp(T, null) :-
     T =.. [_|_].
 
 
+% Predicato principale
 as_polynomial(E, poly(P)) :-
     decompose_p(E,M),
     maplist(as_monomial, M, Ps),
-    sort(2,@=<,Ps,P).
+    predsort(compare_monomials, Ps, P).
 
+% Funzione di confronto personalizzata per ordinare i monomi
+compare_monomials(Order, m(_, G1, V1), m(_, G2, V2)) :-
+    ( G1 < G2 ->
+        Order = <
+    ; G1 > G2 ->
+        Order = >
+    ; compare_variables(V1, V2, Order)
+    ).
+
+% Funzione di confronto per le variabili
+compare_variables([], [], =) :- !.
+compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
+    ( V1 @< V2 ->
+        Order = <
+    ; V1 @> V2 ->
+        Order = >
+    ; D1 < D2 ->
+        Order = <
+    ; D1 > D2 ->
+        Order = >
+    ; compare_variables(T1, T2, Order)
+    ).
 
 
 %Regola per l'addizione
