@@ -391,8 +391,28 @@ mvp_times(poly(Monomi1), poly(Monomi2), poly(Result_sorted)) :-
      predsort(compare_monomials, Result, Result_sorted).
 
 
-mvp_times(poly(Monomi), m(C,D,V), poly(Result)) :-
-    moltiplica_monomi(Monomi, m(C,D,V), Result).
+% Caso: polinomio * monomio
+mvp_times(poly(Monomi1), Monomio, poly(Result_sorted)) :-
+    findall(m(Coeff, TD, VP),
+            (member(M1, Monomi1),
+             mvp_times(M1, Monomio, m(Coeff, TD, VP))),
+            MonomiProdotti),!,
+    sum_like_m(MonomiProdotti, MonomiSommati),
+    % Rimuove i monomi con coefficiente 0
+    exclude(zero_coeff, MonomiSommati, Result),
+    predsort(compare_monomials, Result, Result_sorted).
+
+% Caso: monomio * polinomio
+mvp_times(Monomio, poly(Monomi2), poly(Result_sorted)) :-
+    findall(m(Coeff, TD, VP),
+            (member(M2, Monomi2),
+             mvp_times(Monomio, M2, m(Coeff, TD, VP))),
+            MonomiProdotti),!,
+    sum_like_m(MonomiProdotti, MonomiSommati),
+    % Rimuove i monomi con coefficiente 0
+    exclude(zero_coeff, MonomiSommati, Result),
+    predsort(compare_monomials, Result, Result_sorted).
+
 
 
 % Moltiplica due monomi

@@ -380,14 +380,15 @@ reverse_s([m(C, TD, VP) | T], [m(CNeg, TD, VP) | T1]) :-
 % Predicato principale per la moltiplicazione di un polinomio con un monomio
 
 % Moltiplica due polinomi
-mvp_times(poly(Monomi1), poly(Monomi2), poly(Result)) :-
+mvp_times(poly(Monomi1), poly(Monomi2), poly(Result_sorted)) :-
     findall(m(Coeff, TD, VP),
             (member(M1, Monomi1), member(M2, Monomi2),
              mvp_times(M1, M2, m(Coeff, TD, VP))),
             MonomiProdotti),!,
     sum_like_m(MonomiProdotti, MonomiSommati),
     % Rimuove i monomi con coefficiente 0
-    exclude(zero_coeff, MonomiSommati, Result).
+    exclude(zero_coeff, MonomiSommati, Result),
+     predsort(compare_monomials, Result, Result_sorted).
 
 
 mvp_times(poly(Monomi), m(C,D,V), poly(Result)) :-
@@ -443,7 +444,6 @@ zero_coeff(m(C, _, _)) :- C =:= 0.
 sort_m([], []).
 sort_m([m(C, TD, VP) | T], [m(C, TD, SVP) | ST]) :-
     sort(2,@=<,VP,SVP),
-
     sort_m(T, ST).
 
 
