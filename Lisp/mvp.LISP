@@ -105,3 +105,49 @@
    ((and (eq (first X) 'm) (eq (second X) 0)) T)
    ((and (eq (first X) 'poly) (eq (second X) '())) T)
    (t nil)))
+
+
+
+
+
+;;; as-monomial/1
+(defun as-monomial (e)
+  (reduce-m (sort-m (as-ms e))))
+
+
+;;;funzioni ausiliarie a as-monomial:
+
+;;;as-ms/1:
+(defun as-ms (e)
+  (cond ((is-number e) (list 'm (eval e) 0 nil))
+        ((atom e) (list 'm 1 1 (list (list 'v 1 e))))
+        (t (let ((head (first e)) (tail (rest e)))
+             (if (is-operator head)
+                 (cond ((equal head '-)
+                        (if (listp (second e))
+                            (parse-power-negative-coeff (second e))
+			  (list 'm -1 1 (list 'v 1 (second e)))))
+                       ((equal head '*)
+                        (if (eql (get-coefficient tail) 0) (list 'm 0 0 nil)
+			  (let ((vps (get-var-powers tail 0)))
+			    (append (list 'm) (list (get-coefficient tail))
+				    (list (first vps)) (list (rest vps))))))
+                       ((equal head '+)
+                        nil))
+	       (if (is-power-not-parsed head)
+		   (parse-power head)
+		 (list 'm 1 1 (list (list 'v 1 head)))))))))
+
+;;;reduce-m/1:
+(defun reduce-m (m)
+  (if (null (var-powers m)) m
+    (let ((vps (var-powers mono))
+	  (c (monomial-coefficient m))
+	  (td (monomial-degree m)))
+      (append (list 'm c td) (list (reduce-vps vps))))))
+
+;;; sort-m/1:
+(defun sort-m (m)
+  (let ((new-var-powers (copy-list (var-powers m))))
+    (append (list (first m) (second m) (third m))
+	    (list (stable-sort new-var-powers 'string< :key 'third)))))
