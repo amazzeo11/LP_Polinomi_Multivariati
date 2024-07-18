@@ -278,7 +278,7 @@ extract_v(m(_,_,V), Vs) :-
 variables(poly(P),V) :-
     variables_list(poly(P),Vs),
     maplist(arg(2), Vs, D),
-    list_to_set(D,V).
+    list_to_set(D,Vss), sort(Vss,V).
 
 %%%mvp_plus/3:
 mvp_plus(poly(M1), poly(M2), poly(Result)) :-
