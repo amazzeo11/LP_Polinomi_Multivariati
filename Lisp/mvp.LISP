@@ -44,7 +44,7 @@
 
 ;;;funzioni ausiliarie per is-monomial:
 
-;;; monomial-total-degree/1:
+;;; monomial-degree/1:
 (defun monomial-degree (mn)
   (if (and (= (length mn) 4) (eq 'm (first mn)))
       (let ((mtd (third mn)))
@@ -297,3 +297,11 @@
 
 ;;;----------------------------------------------------------------
 
+;;; as-polynomial/1
+(defun as-polynomial (e)
+  (if (is-monomial e) (parse-polynomial e)
+    (append (list 'poly)
+	    (list
+	     (remove-zero
+	      (sum-similar-monos
+	       (sort-poly (as-polynomial-execute e))))))))
