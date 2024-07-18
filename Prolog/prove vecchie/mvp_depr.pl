@@ -2,11 +2,6 @@
 
 
 
-
-%%%Mazzeo Alessia 899612
-
-
-
 %%% is_monomial/1:
 %%% monomi in forma: m(Coefficient, TotalDegree, VarsPowers)
 
@@ -54,159 +49,9 @@ is_zero(X) :-
     X = poly(M),
     foreach(member(Y, M), is_zero(Y)).
 
-%%% as_polynomial/2:
-as_polynomial(E, poly(P)) :-
-    decompose_p(E, M),
-    maplist(as_monomial, M, Ps),
-    % write('Monomi prima dell\'ordinamento: '), writeln(Ps),
-    predsort(compare_monomials, Ps, P).
-    % write('Monomi dopo l\'ordinamento: '), writeln(P).
-
-compare_monomials(Order, m(_, G1, V1), m(_, G2, V2)) :-
-    ( G1 < G2 ->
-        Order = <
-    ; G1 > G2 ->
-        Order = >
-    ; compare_variables(V1, V2, Order)
-    ).
-
-compare_variables([], [], =).
-compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
-    ( V1 @< V2 ->
-        Order = <
-    ; V1 @> V2 ->
-        Order = >
-    ; D1 < D2 ->
-        Order = <
-    ; D1 > D2 ->
-        Order = >
-    ; compare_variables(T1, T2, Order)
-    ).
-compare_variables([], [_|_], <).
-compare_variables([_|_], [], >).
 
 
 
-%%% decompose_p/2:
-decompose_p(E1+E2, Terms) :-
-    decompose_p(E1, Terms1),
-    decompose_p(E2, Terms2),!,
-    append(Terms1, Terms2, Terms).
-
-decompose_p(E1-E2, Terms) :-
-    decompose_p(E1, Terms1),
-    decompose_p(E2, Terms2),
-    negate_terms(Terms2, NegatedTerms2),!,
-    append(Terms1, NegatedTerms2, Terms).
-
-decompose_p(E, [E]).
-
-%%% negate_terms/2:
-negate_terms([], []).
-negate_terms([E|Es], [NE|NEs]) :-
-    negate_term(E, NE),
-    negate_terms(Es, NEs).
-
-%%% negate_term/2:
-negate_term(E, -E) :-
-    \+ functor(E, -, 1), !.
-negate_term(-E, E) :- !.
-negate_term(E, -E).
-
-
-
-
-as_monomial(-E, m(C, T, V)) :-
-    as_monomial(E, m(PositiveC, T, V)),!,
-    C is -PositiveC.
-
-%%% as_monomial/2:
-as_monomial(E, m(C, T, V)) :-
-    first_symbol(E, S),
-    integer(S),
-    C is S,
-    total_degree(E, TotalDegree),
-    !,
-    T is TotalDegree,
-    var_powers(E, Vs),
-    sort(2, @=<, Vs, Vps),
-    V = Vps.
-
-
-as_monomial(E, m(C, T, V)) :-
-    first_symbol(E, S),
-    \+ integer(S),
-    C is 1,
-    total_degree(E, TotalDegree),
-    !,
-    T is TotalDegree,
-    var_powers(E, Vs),
-    sort(2, @=<, Vs, Vps),
-    V = Vps.
-
-
-
-first_symbol(E, E) :-
-    (number(E); atom(E)), !.
-
-first_symbol(E, Symbol) :-
-    E =.. [_ | Args],
-    Args = [First | _],
-    first_symbol(First, Symbol).
-
-total_degree(E, TotalDegree) :-
-    decompose_m(E, Terms),
-    extract_exp(Terms, Exp),
-    ssum_list(Exp, TotalDegree).
-
-decompose_m(E, [E]) :-
-    atomic(E),
-    !.
-
-decompose_m(E, Terms) :-
-    E =.. [*, T1, T2],
-    decompose_m(T1, Term1),
-    decompose_m(T2, Term2),
-    !,
-    append(Term1, Term2, Terms).
-
-decompose_m(E, [E]) :-
-    E =.. [_ | _].
-
-extract_exp([], []).
-extract_exp([E | Rest], [1 | Exp]) :-
-    atomic(E),
-    \+ integer(E),
-    !,
-    extract_exp(Rest, Exp).
-
-extract_exp([_^Exp | Rest], [Exp | Exps]) :-
-    !,
-    extract_exp(Rest, Exps).
-
-extract_exp([_ | Rest], Exps) :-
-    extract_exp(Rest, Exps).
-
-ssum_list([], 0).
-ssum_list([H | T], Sum) :-
-    ssum_list(T, Rest),
-    Sum is H + Rest.
-
-var_powers(E, V) :-
-    decompose_m(E, E1),
-    maplist(convert_vp, E1, V1),
-    !,
-    exclude(==(null), V1, V).
-
-convert_vp(T, v(Exp, S)) :-
-    T =.. [^, S, Exp].
-
-convert_vp(T, v(1, T)) :-
-    atomic(T),
-    \+ integer(T).
-
-convert_vp(T, null) :-
-    T =.. [_ | _].
 
 
 %%%pprint_polynomial/1
@@ -417,21 +262,4 @@ product_list(List, Product) :-
     foldl(multiply, List, 1, Product).
 
 multiply(X, Y, Z) :- Z is X * Y.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

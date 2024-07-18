@@ -2,11 +2,6 @@
 
 
 
-
-%%%Mazzeo Alessia 899612
-
-
-
 %%% is_monomial/1:
 %%% monomi in forma: m(Coefficient, TotalDegree, VarsPowers)
 
@@ -85,40 +80,60 @@ compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
 compare_variables([], [_|_], <).
 compare_variables([_|_], [], >).
 
+%Regola per l'addizione
+decompose_p(E, Terms) :-
+    E =.. [+, T1, T2],
+    decompose_p(T1, Term1),
+    decompose_p(T2, Term2),
+    !,
+    append(Term1, Term2, Terms).
 
+% Regola per la sottrazione
+decompose_p(E, Terms) :-
+    E =.. [-, T1, T2],
+    decompose_p(T1, T1s),
+    decompose_negative(T2, T2Neg),
+    !,
+    append(T1s, T2Neg, Terms).
 
-%%% decompose_p/2:
-decompose_p(E1+E2, Terms) :-
-    decompose_p(E1, Terms1),
-    decompose_p(E2, Terms2),!,
-    append(Terms1, Terms2, Terms).
+% Regola per il caso base: il termine è un monomio
+decompose_p(E, [E]) :-
+    E =.. [_ | _],
+    !.
 
-decompose_p(E1-E2, Terms) :-
-    decompose_p(E1, Terms1),
-    decompose_p(E2, Terms2),
-    negate_terms(Terms2, NegatedTerms2),!,
-    append(Terms1, NegatedTerms2, Terms).
+% Regola per il caso base: il termine è una costante
+decompose_p(E, [E]) :-
+    atomic(E),
+    !.
 
-decompose_p(E, [E]).
+% Funzione di supporto per negare i termini
+decompose_negative(E, NegTerms) :-
+    E =.. [+, T1, T2],
+    decompose_negative(T1, T1Neg),
+    decompose_negative(T2, T2Neg),
+    !,
+    append(T1Neg, T2Neg, NegTerms).
 
-%%% negate_terms/2:
-negate_terms([], []).
-negate_terms([E|Es], [NE|NEs]) :-
-    negate_term(E, NE),
-    negate_terms(Es, NEs).
+decompose_negative(E, NegTerms) :-
+    E =.. [-, T1, T2],
+    decompose_negative(T1, T1Neg),
+    decompose_p(T2, T2s),
+    !,
+    append(T1Neg, T2s, NegTerms).
 
-%%% negate_term/2:
-negate_term(E, -E) :-
-    \+ functor(E, -, 1), !.
-negate_term(-E, E) :- !.
-negate_term(E, -E).
+decompose_negative(E, [ENeg]) :-
+    E =.. [Op, C, Var],
+    (Op = * -> CNeg is -C, ENeg =.. [*, CNeg, Var]
+    ; Op = ^ -> CNeg is -1, ENeg =.. [*, CNeg, E]
+    ; atomic(E) -> ENeg is -E
+    ; ENeg =.. [(-), E]
+    ),
+    !.
 
-
-
-
-as_monomial(-E, m(C, T, V)) :-
-    as_monomial(E, m(PositiveC, T, V)),!,
-    C is -PositiveC.
+decompose_negative(E, [ENeg]) :-
+    atomic(E),
+    ENeg is -E,
+    !.
 
 %%% as_monomial/2:
 as_monomial(E, m(C, T, V)) :-
@@ -132,7 +147,6 @@ as_monomial(E, m(C, T, V)) :-
     sort(2, @=<, Vs, Vps),
     V = Vps.
 
-
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
     \+ integer(S),
@@ -144,7 +158,16 @@ as_monomial(E, m(C, T, V)) :-
     sort(2, @=<, Vs, Vps),
     V = Vps.
 
-
+as_monomial(E, m(C, T, V)) :-
+    first_symbol(E, S),
+    S = -,
+    C is -1,
+    total_degree(E, TotalDegree),
+    !,
+    T is TotalDegree,
+    var_powers(E, Vs),
+    sort(2, @=<, Vs, Vps),
+    V = Vps.
 
 first_symbol(E, E) :-
     (number(E); atom(E)), !.
@@ -417,21 +440,4 @@ product_list(List, Product) :-
     foldl(multiply, List, 1, Product).
 
 multiply(X, Y, Z) :- Z is X * Y.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

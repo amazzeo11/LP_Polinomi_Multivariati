@@ -8,7 +8,8 @@
 is_monomial(m(_C, TD, VPs)) :-
     integer(TD),
     TD >= 0,
-    is_list(VPs),foreach(member(V, VPs), is_varpower(V)).
+    is_list(VPs),
+    foreach(member(V, VPs), is_varpower(V)).
 
 
 
@@ -48,16 +49,13 @@ is_zero(X) :-
     X = poly(M),
     foreach(member(Y, M), is_zero(Y)).
 
-
-
-%as_polynomial/2:
-
+%%% as_polynomial/2:
 as_polynomial(E, poly(P)) :-
-    decompose_p(E, M),
-    maplist(as_monomial, M, Ps),
-    %write('Monomi prima dell\'ordinamento: '), writeln(Ps),
+    decompose_p(E, M),write(M),
+    maplist(as_monomial, M, Ps),write(M),
+    % write('Monomi prima dell\'ordinamento: '), writeln(Ps),
     predsort(compare_monomials, Ps, P).
-   % write('Monomi dopo l\'ordinamento: '), writeln(P).
+    % write('Monomi dopo l\'ordinamento: '), writeln(P).
 
 compare_monomials(Order, m(_, G1, V1), m(_, G2, V2)) :-
     ( G1 < G2 ->
@@ -82,60 +80,33 @@ compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
 compare_variables([], [_|_], <).
 compare_variables([_|_], [], >).
 
-decompose_p(E, Terms) :-
-    E =.. [+, T1, T2],
-    decompose_p(T1, Term1),
-    decompose_p(T2, Term2),
-    !,
-    append(Term1, Term2, Terms).
+%%% decompose_p/2:
+decompose_p(E1+E2, Terms) :-
+    decompose_p(E1, Terms1),
+    decompose_p(E2, Terms2),!,
+    append(Terms1, Terms2, Terms).
 
-decompose_p(E, Terms) :-
-    E =.. [-, T1, T2],
-    decompose_p(T1, T1s),
-    decompose_negative(T2, T2Neg),
-    !,
-    append(T1s, T2Neg, Terms).
 
-decompose_p(E, [E]) :-
-    E =.. [_ | _],
-    !.
+decompose_p(E, [E]).
+decompose_p(E1-E2, Terms) :-
+    decompose_p(E1, Terms1),
+    decompose_p(E2, Terms2),
+    negate_terms(Terms2, NegatedTerms2),!,
+    append(Terms1, NegatedTerms2, Terms).
 
-decompose_p(E, [E]) :-
-    atomic(E),
-    !.
+decompose_p(E, [E]).
 
-decompose_negative(E, NegTerms) :-
-    E =.. [+, T1, T2],
-    decompose_negative(T1, T1Neg),
-    decompose_negative(T2, T2Neg),
-    !,
-    append(T1Neg, T2Neg, NegTerms).
+%%% negate_terms/2:
+negate_terms([], []).
+negate_terms([E|Es], [NE|NEs]) :-
+    negate_term(E, NE),
+    negate_terms(Es, NEs).
 
-decompose_negative(E, NegTerms) :-
-    E =.. [-, T1, T2],
-    decompose_negative(T1, T1Neg),
-    decompose_p(T2, T2s),
-    !,
-    append(T1Neg, T2s, NegTerms).
-
-decompose_negative(E, [ENeg]) :-
-    E =.. [*, C, Var],
-    (number(C) ->
-        CNeg is -C,
-        ENeg =.. [*, CNeg, Var]
-    ;
-        ENeg =.. [*, -1, E]
-    ),
-    !.
-
-decompose_negative(E, [ENeg]) :-
-    atomic(E),
-    (number(E) ->
-        ENeg is -E
-    ;
-        ENeg =.. [*, -1, E]
-    ),
-    !.
+%%% negate_term/2:
+negate_term(E, -E) :-
+    \+ functor(E, -, 1), !.
+negate_term(-E, E) :- !.
+negate_term(E, -E).
 
 
 %%% as_monomial/2:
@@ -147,30 +118,24 @@ as_monomial(E, m(C, T, V)) :-
     !,
     T is TotalDegree,
     var_powers(E, Vs),
-    sort(2,@=<,Vs,Vps),
+    sort(2, @=<, Vs, Vps),
     V = Vps.
 
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
-    \+integer(S),
+    \+ integer(S),
     C is 1,
     total_degree(E, TotalDegree),
     !,
     T is TotalDegree,
     var_powers(E, Vs),
-    sort(2,@=<,Vs,Vps),
+    sort(2, @=<, Vs, Vps),
     V = Vps.
 
-as_monomial(E, m(C, T, V)) :-
-    first_symbol(E, S),
-    S = -,
-    C is -1,
-    total_degree(E, TotalDegree),
-    !,
-    T is TotalDegree,
-    var_powers(E, Vs),
-    sort(2,@=<,Vs,Vps),
-    V = Vps.
+as_monomial(-E, m(C, T, V)) :-
+    as_monomial(E, m(PositiveC, T, V)),
+    C is -PositiveC.
+
 
 first_symbol(E, E) :-
     (number(E); atom(E)), !.
@@ -180,12 +145,10 @@ first_symbol(E, Symbol) :-
     Args = [First | _],
     first_symbol(First, Symbol).
 
-
 total_degree(E, TotalDegree) :-
     decompose_m(E, Terms),
     extract_exp(Terms, Exp),
     ssum_list(Exp, TotalDegree).
-
 
 decompose_m(E, [E]) :-
     atomic(E),
@@ -234,8 +197,7 @@ convert_vp(T, v(1, T)) :-
     \+ integer(T).
 
 convert_vp(T, null) :-
-    T =.. [_|_].
-
+    T =.. [_ | _].
 
 
 %%%pprint_polynomial/1

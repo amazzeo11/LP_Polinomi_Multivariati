@@ -2,11 +2,6 @@
 
 
 
-
-%%%Mazzeo Alessia 899612
-
-
-
 %%% is_monomial/1:
 %%% monomi in forma: m(Coefficient, TotalDegree, VarsPowers)
 
@@ -56,7 +51,7 @@ is_zero(X) :-
 
 %%% as_polynomial/2:
 as_polynomial(E, poly(P)) :-
-    decompose_p(E, M),
+    decompose_p(E, M),write(M),
     maplist(as_monomial, M, Ps),
     % write('Monomi prima dell\'ordinamento: '), writeln(Ps),
     predsort(compare_monomials, Ps, P).
@@ -85,14 +80,14 @@ compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
 compare_variables([], [_|_], <).
 compare_variables([_|_], [], >).
 
-
-
 %%% decompose_p/2:
 decompose_p(E1+E2, Terms) :-
     decompose_p(E1, Terms1),
     decompose_p(E2, Terms2),!,
     append(Terms1, Terms2, Terms).
 
+
+decompose_p(E, [E]).
 decompose_p(E1-E2, Terms) :-
     decompose_p(E1, Terms1),
     decompose_p(E2, Terms2),
@@ -114,12 +109,6 @@ negate_term(-E, E) :- !.
 negate_term(E, -E).
 
 
-
-
-as_monomial(-E, m(C, T, V)) :-
-    as_monomial(E, m(PositiveC, T, V)),!,
-    C is -PositiveC.
-
 %%% as_monomial/2:
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
@@ -132,7 +121,6 @@ as_monomial(E, m(C, T, V)) :-
     sort(2, @=<, Vs, Vps),
     V = Vps.
 
-
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
     \+ integer(S),
@@ -144,6 +132,9 @@ as_monomial(E, m(C, T, V)) :-
     sort(2, @=<, Vs, Vps),
     V = Vps.
 
+as_monomial(-E, m(C, T, V)) :-
+    as_monomial(E, m(PositiveC, T, V)),
+    C is -PositiveC.
 
 
 first_symbol(E, E) :-
@@ -417,21 +408,4 @@ product_list(List, Product) :-
     foldl(multiply, List, 1, Product).
 
 multiply(X, Y, Z) :- Z is X * Y.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
