@@ -419,8 +419,8 @@
 
 
 
-;;;operazioni per polinomi e monomi:
 
+;;;operazioni per polinomi e monomi:
 
 
 ;;;mvp-plus/2:
@@ -510,8 +510,8 @@
 	   (tail1 (rest ms1))
 	   (tail2 (rest ms2)))
       (append (list (mul-m head1 head2))
-	      (mvp-t-call (list head1) tail2)
-	      (mvp-t-call tail1 ms2)))))
+	      (mvp-t (list head1) tail2)
+	      (mvp-t tail1 ms2)))))
 
 
 
@@ -550,3 +550,23 @@
 			   (mul-v vps1 (rest vps2)))
 		 (append (list (list 'v exp1 v1))
 			 (mul-v (rest vps1) vps2))))))))
+
+
+
+
+(defun mvp-val (polynomial values)
+  (let ((parsed-p (convert-p polynomial)))
+    (reduce #'+
+            (mapcar (lambda (monomial)
+                      (let ((coeff (monomial-coefficient monomial))
+                            (var-powers (var-powers monomial)))
+                        (* coeff
+                           (reduce #'* (mapcar (lambda (var-power)
+                                                 (let* ((var (varpower-symbol var-power))
+                                                        (power (varpower-power var-power))
+                                                        (value (cdr (assoc var values))))
+                                                   (if value
+                                                       (expt value power)
+                                                     (error "Variable ~A not found in values list" var))))
+                                               var-powers)))))
+                    (monomials parsed-p)))))
