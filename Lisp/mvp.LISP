@@ -230,10 +230,10 @@
 (defun monomial-coefficient (mn)
   (if (null mn) 0
     (if (and (= (length mn) 4) (eq 'm (first mn)))
-	(let ((coeff (second mn)))
-	  (if (numberp coeff) coeff nil))
-      (let* ((parsed-m (as-monomial mn)) (coeff (second parsed-m)))
-	(if (numberp coeff) coeff nil)))))
+	(let ((c (second mn)))
+	  (if (numberp c) c nil))
+      (let* ((parsed-m (as-monomial mn)) (c (second parsed-m)))
+	(if (numberp c) c nil)))))
 
 ;;;sort-p/2:
 (defun sort-p (mns)
@@ -241,30 +241,30 @@
     (stable-sort poly-c #'order-d)))
 
 ;;; order-d/2
-(defun order-d (first-mono rest-monos)
-  (when (not (null first-mono))
+(defun order-d (m ms)
+  (when (not (null m))
     (let ((degrees
-	   (list (monomial-degree first-mono)
-		 (monomial-degree rest-monos))))
-      (cond ((null first-mono) (not (null rest-monos)))
-            ((null rest-monos) nil)
+	   (list (monomial-degree m)
+		 (monomial-degree ms))))
+      (cond ((null m) (not (null ms)))
+            ((null ms) nil)
             ((= (first degrees) (second degrees))
-	     (order-p (var-powers first-mono)
-				 (var-powers rest-monos)))
+	     (order-p (var-powers m)
+				 (var-powers ms)))
             (t (< (first degrees) (second degrees)))))))
 
 ;;;order-p/2:
-(defun order-p (vars1 vars2)
-  (cond ((null vars1) (not (null vars2)))
-	((null vars2) nil)
+(defun order-p (vs1 vs2)
+  (cond ((null vs1) (not (null vs2)))
+	((null vs2) nil)
 	(t
-         (let ((v1 (first vars1)) (v2 (first vars2)))
+         (let ((v1 (first vs1)) (v2 (first vs2)))
            (cond
 	    ((string< (third v1) (third v2)) t)
 	    ((string> (third v1) (third v2)) nil)
 	    ((and (equal (third v1) (third v2)) (= (second v1) (second v2)))
-	     (order-p (rest vars1) (rest vars2)))
-	    (t (< (second (first vars1)) (second (first vars2)))))))))
+	     (order-p (rest vs1) (rest vs2)))
+	    (t (< (second (first vs1)) (second (first vs2)))))))))
 
 
 ;;;reduce-vps/1:
@@ -275,24 +275,24 @@
 	     (vp2 (second vps))
 	     (expt1 (varpower-power vp1))
 	     (expt2 (varpower-power vp2))
-	     (var1 (varpower-symbol vp1))
-	     (var2 (varpower-symbol vp2))
+	     (v1 (varpower-symbol vp1))
+	     (v2 (varpower-symbol vp2))
 	     (tail (rest (rest vps))))
 	(if (not (null tail))
 	    (if (not (null vp2))
-		(if (equal var1 var2)
+		(if (equal v1 v2)
 		    (reduce-vps (append
 				   (list (list 'v (+ (eval expt1)
 						     (eval expt2))
-					       var1))
+					       v1))
 				   tail))
-		  (append (list (list 'v expt1 var1))
+		  (append (list (list 'v expt1 v1))
 			  (reduce-vps (rest vps)))))
-	  (if (equal var1 var2) (list (list 'v (+ (eval expt1)
+	  (if (equal v1 v2) (list (list 'v (+ (eval expt1)
 						  (eval expt2))
 					    var1))
-	    (append (list (list 'v expt1 var1))
-		    (list (list 'v expt2 var2)))))))))
+	    (append (list (list 'v expt1 v1))
+		    (list (list 'v expt2 v2)))))))))
 
 
 
@@ -303,7 +303,7 @@
     (append (list 'poly)
 	    (list
 	     (remove-zero
-	      (sum-similar-monos
+	      (sum-like-m
 	       (sort-p (as-pe e))))))))
 
 
@@ -318,7 +318,7 @@
 	    (if (equal head '+)
 		(as-pe tail)
 	      (list (as-monomial e)))
-	  (if (and (listp expr) (not (null tail)))
+	  (if (and (listp e) (not (null tail)))
 	      (append (list (as-monomial head)) (as-pe tail))
 	    (list (as-monomial head))))))))
 
@@ -330,7 +330,7 @@
 
 ;;; vars-of/1
 (defun vars-of (mn)
-  (if (not (and (equal (first mono) 'm) (= (length mn) 4)))
+  (if (not (and (equal (first mn) 'm) (= (length mn) 4)))
       (vars-of (as-monomial mn))
     (apply #'append
 	   (let ((vps (var-powers mn)))
@@ -420,3 +420,44 @@
 
 
 ;;;operazioni per polinomi e monomi:
+
+
+
+;;;mvp-plus/2:
+(defun mvp-plus (pl1 pl2)
+  (let ((p1 (convert-p pl1)) (p2 (convert-p pl2)))
+    (append (list 'poly)
+            (list (remove-zero
+                   (sort-p
+                    (sum-like-m
+                     (sort-p (append (monomials p1)
+                                        (monomials p2))))))))))
+
+
+;;;sum-like-m/1:
+(defun sum-like-m (ms)
+  (cond ((null ms) nil)
+        ((null (second ms)) ms)
+        (t
+         (let* ((m1 (first ms))
+		(m2 (second ms))
+		(c1 (monomial-coefficient m1))
+		(c2 (monomial-coefficient m2))
+		(td (monomial-degree m1))
+		(vp1 (var-powers m1))
+		(vp2 (var-powers m2)))
+           (if (not (equal vp1 vp2))
+	       (append (list m1)
+		       (sum-like-m (rest ms)))
+	     (sum-like-m
+	      (append (list (list 'm (+ c1 c2) td vp1))
+		      (rest (rest ms)))))))))
+
+
+;;;remove-zero/1:
+(defun remove-zero (ms)
+  (if (null ms) nil
+    (let ((c (monomial-coefficient (first ms))))
+      (if (= c 0)
+	  (remove-zero (rest ms))
+	(append (list (first ms)) (remove-zero (rest ms)))))))
