@@ -295,13 +295,128 @@
 		    (list (list 'v expt2 var2)))))))))
 
 
-;;;----------------------------------------------------------------
+
 
 ;;; as-polynomial/1
 (defun as-polynomial (e)
-  (if (is-monomial e) (parse-polynomial e)
+  (if (is-monomial e) (parse-p e)
     (append (list 'poly)
 	    (list
 	     (remove-zero
 	      (sum-similar-monos
-	       (sort-poly (as-polynomial-execute e))))))))
+	       (sort-p (as-pe e))))))))
+
+
+;;;funzioni ausiliarie per as-polynomial:
+
+;;; as-pe/1
+(defun as-pe (e)
+  (when (not (null e))
+    (if (atom e) (list (as-monomial e))
+      (let ((head (first e)) (tail (rest e)))
+	(if (is-op head)
+	    (if (equal head '+)
+		(as-pe tail)
+	      (list (as-monomial e)))
+	  (if (and (listp expr) (not (null tail)))
+	      (append (list (as-monomial head)) (as-pe tail))
+	    (list (as-monomial head))))))))
+
+
+
+
+
+
+
+;;; vars-of/1
+(defun vars-of (mn)
+  (if (not (and (equal (first mono) 'm) (= (length mn) 4)))
+      (vars-of (as-monomial mn))
+    (apply #'append
+	   (let ((vps (var-powers mn)))
+	     (append (list (mapcar (lambda (x) (third x)) vps)))))))
+
+
+;;;coefficients/1:
+(defun coefficients (p)
+  (let* ((parsed-p (convert-p p)) 
+         (monomials (monomials parsed-p)))
+    (if (null monomials) 
+        '(0)
+      (mapcar 'monomial-coefficient monomials))))
+
+
+
+;;; variables/1
+(defun variables (p)
+  (let ((parsed-p (convert-p p)))
+    (remove-duplicates (mapcar #'varpower-symbol
+			       (apply #'append
+				      (mapcar #'var-powers
+					      (monomials parsed-p)))))))
+
+
+;;;max-degree/1:
+
+(defun max-degree (p)
+  (let* ((parsed-p (convert-p p)))
+    (monomial-degree (first (last (monomials parsed-p))))))
+
+
+;;;min-degree/1:
+(defun min-degree (p)
+  (let* ((parsed-p (convert-p p)))
+    (monomial-degree (first (monomials parsed-p)))))
+
+
+
+
+;;;pprint-polynomial/1:
+(defun pprint-polynomial (poly)
+  (format t "~a"
+	  (format nil "~a"
+		  (pprint-pe
+		   (second (convert-p poly))))))
+
+;;;funzioni ausiliarie per pprint-polynomial:
+
+;;;pprint-pe/1:
+(defun pprint-pe (mn)
+  (let ((m1 (first mn)) (c2 (second (second mn))))
+    (if (not (null c2))
+        (if (> c2 0)
+            (append (pprint-pc m1)
+		    (list '+)
+		    (pprint-pe (rest mn)))
+	  (append (pprint-pc m1)
+		  (pprint-pe (rest mn))))
+      (append (pprint-pc m1)))))
+
+;;;pprint-pc/1:
+(defun pprint-pc (m1)
+  (let ((c1 (second m1)) (v&p (fourth m1)))
+    (if (equal v&p nil)
+        (append (list c1))
+      (append (list c1)
+	      (list '*)
+	      (pprint-pv v&p)))))
+
+
+
+;;;pprint-pv/1:
+(defun pprint-pv (vp)
+  (if (null vp) nil
+    (let ((exp (second (first vp))) (var (third (first vp))))
+      (if (equal (rest vp) nil)
+	  (if (= exp 1)
+	      (append (list var)) (append (list var '^ exp)))
+	(if (= exp 1)
+	    (append (list var '*)
+		    (pprint-pv (rest vp)))
+	  (append (list var '^ exp '*)
+		  (pprint-pv
+		   (rest vp))))))))
+
+
+
+;;;operazioni per polinomi e monomi:
