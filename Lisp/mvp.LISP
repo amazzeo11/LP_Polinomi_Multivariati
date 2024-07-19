@@ -419,8 +419,8 @@
 
 
 
-;;;operazioni per polinomi e monomi:
 
+;;;operazioni per polinomi e monomi:
 
 
 ;;;mvp-plus/2:
@@ -510,8 +510,8 @@
 	   (tail1 (rest ms1))
 	   (tail2 (rest ms2)))
       (append (list (mul-m head1 head2))
-	      (mvp-t-call (list head1) tail2)
-	      (mvp-t-call tail1 ms2)))))
+	      (mvp-t (list head1) tail2)
+	      (mvp-t tail1 ms2)))))
 
 
 
@@ -550,3 +550,93 @@
 			   (mul-v vps1 (rest vps2)))
 		 (append (list (list 'v exp1 v1))
 			 (mul-v (rest vps1) vps2))))))))
+
+
+
+;;;mvp-val/2:
+(defun mvp-val (p val)
+  (if (not (equal 'poly (first p))) (mvp-val (convert-p p) val)
+    (if (listp val)
+	(let* ((p-parsed (convert-p p))
+	       (vs (variables p-parsed))
+	       (alternate (new-pairlis vs val)))
+	  (if (null vs) (monomial-coefficient (second p))
+	    (let* ((ms (monomials p-parsed))
+		   (m-val
+		    (sub-vm ms alternate)))
+	      (eval-m m-val))))
+      nil)))
+
+
+
+
+;;; new-pairlis/2
+(defun new-pairlis (l1 l2)
+  (if (null l1) nil
+    (if (null l2) nil
+      (append (list (list (first l1) (first l2)))
+	      (new-pairlis (rest l1) (rest l2))))))
+
+
+
+
+;;;sub-vm/2:
+(defun sub-vm (ms alternate)
+  (let* ((head (first ms))
+	 (tail (rest ms))
+	 (vps (var-powers head))
+	 (c (second head))
+         (d (third head))
+	 (vps-a (sub-vvps vps alternate)))
+    (if (not (null tail))
+	(append (list (list 'm c d vps-a))
+		(sub-vm tail alternate))
+      (list (list 'm c d vps-a)))))
+
+
+;;; sub-vvps/2
+(defun sub-vvps (vps alternate)
+  (let* ((head (first vps)) (tail (rest vps)))
+    (if (not (null tail))
+	(append (list (sub-vvp head alternate))
+		(sub-vvps tail alternate))
+      (list (sub-vvp head alternate)))))
+
+
+;;;sub-vvp/2:
+(defun sub-vvp (vp alternate)
+  (if (null alternate) nil
+    (let* ((v (third vp))
+	   (v-a (first (first alternate)))
+	   (val (second (first alternate)))
+	   (tail (rest alternate))
+	   (expt (second vp)))
+      (if (and (null v) (null expt))
+	  (list 'v 0 0)
+	(if (eq v v-a)
+	    (list 'v expt val)
+	  (sub-vvp vp tail))))))
+
+
+;;;eval-m/1:
+(defun eval-m (ms)
+  (let* ((head (first ms))
+	 (tail (rest ms))
+	 (c (second head))
+	 (vps (var-powers head))
+	 (vps-a (eval-vps vps)))
+    (if (not (null tail))
+	(+ (* c vps-a) (eval-m tail))
+      (* c vps-a))))
+
+
+
+;;;eval-vps/1:
+(defun eval-vps (vps)
+  (let* ((head (first vps))
+	 (tail (rest vps))
+	 (exp (second head))
+	 (base (third head)))
+    (if (not (null tail))
+	(* (expt base exp) (eval-vps tail))
+      (expt base exp))))
