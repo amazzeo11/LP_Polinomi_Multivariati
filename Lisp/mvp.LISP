@@ -290,7 +290,7 @@
 			  (reduce-vps (rest vps)))))
 	  (if (equal v1 v2) (list (list 'v (+ (eval expt1)
 						  (eval expt2))
-					    var1))
+					    v1))
 	    (append (list (list 'v expt1 v1))
 		    (list (list 'v expt2 v2)))))))))
 
@@ -470,7 +470,7 @@
   (let ((p1 (convert-p pl1)) (p2 (convert-p pl2)))
     (append (list 'poly)
             (list (remove-zero
-                   (sort-poly
+                   (sort-p
                     (sum-like-m
                      (sort-p (append (monomials p1)
                                         (reverse-s
@@ -486,3 +486,67 @@
 	   (var-powers (fourth m1)))
       (append (list (list 'm (- c1) td var-powers))
 	      (reverse-s (rest ms))))))
+
+
+
+
+
+;;; mvp-times/2
+(defun mvp-times (p1 p2)
+  (append (list 'poly)
+          (list (remove-zero
+                 (sort-p (sum-like-m
+                             (mvp-t
+                              (monomials (convert-p p1))
+                              (monomials (convert-p p2)))))))))
+
+
+
+;;; mvp-t/2
+(defun mvp-t (ms1 ms2)
+  (if (or (null ms1) (null ms2)) nil
+    (let* ((head1 (first ms1))
+	   (head2 (first ms2))
+	   (tail1 (rest ms1))
+	   (tail2 (rest ms2)))
+      (append (list (mul-m head1 head2))
+	      (mvp-t-call (list head1) tail2)
+	      (mvp-t-call tail1 ms2)))))
+
+
+
+
+;;;mul-m/2
+(defun mul-m (m1 m2)
+  (cond ((null m1) m2)
+        ((null m2) m1)
+        (t (let ((c1 (monomial-coefficient m1))
+                 (c2 (monomial-coefficient m2))
+                 (d1 (monomial-degree m1))
+                 (d2 (monomial-degree m2))
+                 (vps1 (var-powers m1))
+                 (vps2 (var-powers m2)))
+             (if (or (= 0 c1) (= 0 c2)) (list 'm 0 0 nil)
+	       (append (list 'm
+			     (* c1 c2)
+			     (+ d1 d2)
+			     (mul-v vps1 vps2))))))))
+
+;;;mul-v/2:
+(defun mul-v (vps1 vps2)
+  (cond ((null vps1) vps2)
+        ((null vps2) vps1)
+        (t (let* ((vp1 (first vps1))
+                  (vp2 (first vps2))
+                  (exp1 (varpower-power vp1))
+                  (exp2 (varpower-power vp2))
+                  (v1 (varpower-symbol vp1))
+                  (v2 (varpower-symbol vp2)))
+             (if (equal v1 v2)
+                 (append (list (list 'v (+ exp1 exp2) v1))
+                         (mul-v (rest vps1) (rest vps2)))
+	       (if (string>= v1 v2)
+		   (append (list (list 'v exp2 v2))
+			   (mul-v vps1 (rest vps2)))
+		 (append (list (list 'v exp1 v1))
+			 (mul-v (rest vps1) vps2))))))))
