@@ -461,3 +461,28 @@
       (if (= c 0)
 	  (remove-zero (rest ms))
 	(append (list (first ms)) (remove-zero (rest ms)))))))
+
+
+
+
+;;;mvp-minus/2:
+(defun mvp-minus (pl1 pl2)
+  (let ((p1 (convert-p pl1)) (p2 (convert-p pl2)))
+    (append (list 'poly)
+            (list (remove-zero
+                   (sort-poly
+                    (sum-like-m
+                     (sort-p (append (monomials p1)
+                                        (reverse-s
+                                         (monomials p2)))))))))))
+
+
+;;;reverse-s/1:
+(defun reverse-s (ms)
+  (if (null ms) nil
+    (let* ((m1 (first ms))
+	   (c1 (second m1))
+	   (td (third m1))
+	   (var-powers (fourth m1)))
+      (append (list (list 'm (- c1) td var-powers))
+	      (reverse-s (rest ms))))))
