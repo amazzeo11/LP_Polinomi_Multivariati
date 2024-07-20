@@ -104,6 +104,7 @@
    ((and (numberp X)(eq X 0)) T) 
    ((and (eq (first X) 'm) (eq (second X) 0)) T)
    ((and (eq (first X) 'poly) (eq (second X) '())) T)
+   ((and (eq (first X) 'poly) (every #'is-zero (rest X))) T)
    (t nil)))
 
 
