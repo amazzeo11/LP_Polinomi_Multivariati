@@ -1,6 +1,5 @@
-;;;Mazzeo Alessia 899612
+;;;Mazzeo	Alessia	899612
 
-;;;FUNZIONI DI CONTROLLO:
 
 ;;;is-varpower/1:
 (defun is-varpower(vp)
@@ -44,7 +43,7 @@
 
 ;;;funzioni ausiliarie per is-monomial:
 
-;;; monomial-degree/1:
+;;;monomial-degree/1:
 (defun monomial-degree (mn)
   (if (and (= (length mn) 4) (eq 'm (first mn)))
       (let ((mtd (third mn)))
@@ -54,7 +53,7 @@
       (let* ((parsed-m (as-monomial mn)) (mtd (third parsed-m)))
 	(if (>= mtd 0) mtd nil)))))
 
-;; var-powers/1:
+;;var-powers/1:
 (defun var-powers (mn)
   (if (and (= (length mn) 4) (eq 'm (first mn)))
       (let ((vps (fourth mn)))
@@ -70,7 +69,7 @@
 
 
 ;;;is-polynomial/1:
- (defun is-polynomial (p)
+(defun is-polynomial (p)
  (and (listp p)
  (eq 'poly (first p))
  (let ((ms (monomials p)))
@@ -104,13 +103,14 @@
    ((and (numberp X)(eq X 0)) T) 
    ((and (eq (first X) 'm) (eq (second X) 0)) T)
    ((and (eq (first X) 'poly) (eq (second X) '())) T)
+   ((and (eq (first X) 'poly) (every #'is-zero (rest X))) T)
    (t nil)))
 
 
 
 
 
-;;; as-monomial/1
+;;;as-monomial/1
 (defun as-monomial (e)
   (reduce-m (sort-m (as-ms e))))
 
@@ -163,7 +163,7 @@
         result 
       nil)))
 
-;;; is-op/1
+;;;is-op/1:
 (defun is-op (operator)
   (if (or (eql operator '*) (eql operator '/)
 	  (eql operator '-) (eql operator '+))
@@ -185,7 +185,7 @@
       (* 1 (get-c (rest e))))))
 
 
-;;;get-vp/2
+;;;get-vp/2:
 (defun get-vp (e td)
   (let ((head (first e)) (tail (rest e)))
     (cond ((and (listp head)
@@ -207,14 +207,6 @@
           ((null head) (list td)))))
 
 
-
-;;; check-p/1
-(defun check-p (e)
-  (if (not (listp e)) nil
-    (if (and (equal (first e) 'expt) (symbolp (second e))
-	     (numberp (third e)))
-	T NIL)))
-
 ;;;parse-p/1:
 (defun parse-p (e)
   (if (check-p e)
@@ -226,7 +218,16 @@
     nil))
 
 
-;;; monomial-coefficient/1
+;;;check-p/1:
+(defun check-p (e)
+  (if (not (listp e)) nil
+    (if (and (equal (first e) 'expt) (symbolp (second e))
+	     (numberp (third e)))
+	T NIL)))
+
+
+
+;;;monomial-coefficient/1:
 (defun monomial-coefficient (mn)
   (if (null mn) 0
     (if (and (= (length mn) 4) (eq 'm (first mn)))
@@ -240,7 +241,7 @@
   (let ((poly-c (copy-list mns)))
     (stable-sort poly-c #'order-d)))
 
-;;; order-d/2
+;;;order-d/2:
 (defun order-d (m ms)
   (when (not (null m))
     (let ((degrees
@@ -297,7 +298,7 @@
 
 
 
-;;; as-polynomial/1
+;;;as-polynomial/1:
 (defun as-polynomial (e)
   (if (is-monomial e) (parse-p e)
     (append (list 'poly)
@@ -309,7 +310,7 @@
 
 ;;;funzioni ausiliarie per as-polynomial:
 
-;;; as-pe/1
+;;;as-pe/1:
 (defun as-pe (e)
   (when (not (null e))
     (if (atom e) (list (as-monomial e))
@@ -328,7 +329,7 @@
 
 
 
-;;; vars-of/1
+;;;vars-of/1:
 (defun vars-of (mn)
   (if (not (and (equal (first mn) 'm) (= (length mn) 4)))
       (vars-of (as-monomial mn))
@@ -347,7 +348,7 @@
 
 
 
-;;; variables/1
+;;;variables/1:
 (defun variables (p)
   (let ((parsed-p (convert-p p)))
     (remove-duplicates (mapcar #'varpower-symbol
@@ -357,7 +358,6 @@
 
 
 ;;;max-degree/1:
-
 (defun max-degree (p)
   (let* ((parsed-p (convert-p p)))
     (monomial-degree (first (last (monomials parsed-p))))))
@@ -433,6 +433,7 @@
                      (sort-p (append (monomials p1)
                                         (monomials p2))))))))))
 
+;;;funzioni ausiliarie per mvp-plus:
 
 ;;;sum-like-m/1:
 (defun sum-like-m (ms)
@@ -476,6 +477,7 @@
                                         (reverse-s
                                          (monomials p2)))))))))))
 
+;;;funzioni ausiliarie per mvp-minus:
 
 ;;;reverse-s/1:
 (defun reverse-s (ms)
@@ -491,7 +493,7 @@
 
 
 
-;;; mvp-times/2
+;;;mvp-times/2:
 (defun mvp-times (p1 p2)
   (append (list 'poly)
           (list (remove-zero
@@ -500,9 +502,9 @@
                               (monomials (convert-p p1))
                               (monomials (convert-p p2)))))))))
 
+;;;funzioni ausiliarie per mvp-times:
 
-
-;;; mvp-t/2
+;;;mvp-t/2:
 (defun mvp-t (ms1 ms2)
   (if (or (null ms1) (null ms2)) nil
     (let* ((head1 (first ms1))
@@ -516,7 +518,7 @@
 
 
 
-;;;mul-m/2
+;;;mul-m/2:
 (defun mul-m (m1 m2)
   (cond ((null m1) m2)
         ((null m2) m1)
@@ -553,90 +555,30 @@
 
 
 
+
+
+
 ;;;mvp-val/2:
-(defun mvp-val (p val)
-  (if (not (equal 'poly (first p))) (mvp-val (convert-p p) val)
-    (if (listp val)
-	(let* ((p-parsed (convert-p p))
-	       (vs (variables p-parsed))
-	       (alternate (new-pairlis vs val)))
-	  (if (null vs) (monomial-coefficient (second p))
-	    (let* ((ms (monomials p-parsed))
-		   (m-val
-		    (sub-vm ms alternate)))
-	      (eval-m m-val))))
-      nil)))
+(defun mvp-val (p vals)
+  (let* ((vs (variables p))
+         (a-list (pairlis vs vals)))
+    (eval-p p a-list)))
 
+;;;funzioni ausiliarie per mvp-val:
 
+;;;eval-p/2:
+(defun eval-p (p a-list)
+  (let ((terms (second p)))
+    (reduce #'+ (mapcar (lambda (term)
+                          (eval-term term a-list))
+                        terms))))
 
-
-;;; new-pairlis/2
-(defun new-pairlis (l1 l2)
-  (if (null l1) nil
-    (if (null l2) nil
-      (append (list (list (first l1) (first l2)))
-	      (new-pairlis (rest l1) (rest l2))))))
-
-
-
-
-;;;sub-vm/2:
-(defun sub-vm (ms alternate)
-  (let* ((head (first ms))
-	 (tail (rest ms))
-	 (vps (var-powers head))
-	 (c (second head))
-         (d (third head))
-	 (vps-a (sub-vvps vps alternate)))
-    (if (not (null tail))
-	(append (list (list 'm c d vps-a))
-		(sub-vm tail alternate))
-      (list (list 'm c d vps-a)))))
-
-
-;;; sub-vvps/2
-(defun sub-vvps (vps alternate)
-  (let* ((head (first vps)) (tail (rest vps)))
-    (if (not (null tail))
-	(append (list (sub-vvp head alternate))
-		(sub-vvps tail alternate))
-      (list (sub-vvp head alternate)))))
-
-
-;;;sub-vvp/2:
-(defun sub-vvp (vp alternate)
-  (if (null alternate) nil
-    (let* ((v (third vp))
-	   (v-a (first (first alternate)))
-	   (val (second (first alternate)))
-	   (tail (rest alternate))
-	   (expt (second vp)))
-      (if (and (null v) (null expt))
-	  (list 'v 0 0)
-	(if (eq v v-a)
-	    (list 'v expt val)
-	  (sub-vvp vp tail))))))
-
-
-;;;eval-m/1:
-(defun eval-m (ms)
-  (let* ((head (first ms))
-	 (tail (rest ms))
-	 (c (second head))
-	 (vps (var-powers head))
-	 (vps-a (eval-vps vps)))
-    (if (not (null tail))
-	(+ (* c vps-a) (eval-m tail))
-      (* c vps-a))))
-
-
-
-;;;eval-vps/1:
-(defun eval-vps (vps)
-  (let* ((head (first vps))
-	 (tail (rest vps))
-	 (exp (second head))
-	 (base (third head)))
-    (if (not (null tail))
-	(* (expt base exp) (eval-vps tail))
-      (expt base exp))))
+;;;eval-term/2:
+(defun eval-term (term a-list)
+  (let* ((c (second term))
+         (vs (fourth term))
+         (var-vals (mapcar (lambda (v)
+                               (let ((v-name (third v)))
+                                 (expt (cdr (assoc v-name a-list)) (second v))))
+                             vs)))
+    (* c (apply #'* var-vals))))
