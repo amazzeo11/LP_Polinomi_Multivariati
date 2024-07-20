@@ -255,7 +255,7 @@ min_degree(poly([m(_,D,_)|_]), D).
 %%%max_degree/2:
 max_degree(poly(P), D):- sort(2,@>=,P,Ps), Ps = [m(_,D,_)|_].
 
-
+%%%funzione extra per monomi tradizionali
 monomials_t(P,M):-
     decompose_p(P,Ms),
     sort(1,@<,Ms,M).
