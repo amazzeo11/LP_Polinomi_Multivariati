@@ -1,5 +1,3 @@
-%%%Mazzeo Alessia 899612
-
 
 
 %%% is_monomial/1:
@@ -32,6 +30,7 @@ is_polynomial(poly(Monomials)) :-
 
 
 %%%is_zero/1:
+is_zero(0):-!.
 is_zero([]):- !.
 
 is_zero(X) :-
@@ -51,11 +50,10 @@ is_zero(X) :-
 
 %%% as_polynomial/2:
 as_polynomial(E, poly(P)) :-
-    decompose_p(E, M),write(M),
-    maplist(as_monomial, M, Ps),write(M),
-    % write('Monomi prima dell\'ordinamento: '), writeln(Ps),
-    predsort(compare_monomials, Ps, P).
-    % write('Monomi dopo l\'ordinamento: '), writeln(P).
+    decompose_p(E, M),
+    maplist(as_monomial, M, Ps),
+    predsort(compare_monomials, Ps, P),!.
+
 
 compare_monomials(Order, m(_, G1, V1), m(_, G2, V2)) :-
     ( G1 < G2 ->
@@ -80,14 +78,14 @@ compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
 compare_variables([], [_|_], <).
 compare_variables([_|_], [], >).
 
+
+
 %%% decompose_p/2:
 decompose_p(E1+E2, Terms) :-
     decompose_p(E1, Terms1),
     decompose_p(E2, Terms2),!,
     append(Terms1, Terms2, Terms).
 
-
-decompose_p(E, [E]).
 decompose_p(E1-E2, Terms) :-
     decompose_p(E1, Terms1),
     decompose_p(E2, Terms2),
@@ -109,6 +107,12 @@ negate_term(-E, E) :- !.
 negate_term(E, -E).
 
 
+
+
+as_monomial(-E, m(C, T, V)) :-
+    as_monomial(E, m(PositiveC, T, V)),!,
+    C is -PositiveC.
+
 %%% as_monomial/2:
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
@@ -121,6 +125,7 @@ as_monomial(E, m(C, T, V)) :-
     sort(2, @=<, Vs, Vps),
     V = Vps.
 
+
 as_monomial(E, m(C, T, V)) :-
     first_symbol(E, S),
     \+ integer(S),
@@ -132,9 +137,6 @@ as_monomial(E, m(C, T, V)) :-
     sort(2, @=<, Vs, Vps),
     V = Vps.
 
-as_monomial(-E, m(C, T, V)) :-
-    as_monomial(E, m(PositiveC, T, V)),
-    C is -PositiveC.
 
 
 first_symbol(E, E) :-
@@ -259,87 +261,103 @@ monomials_t(P,M):-
     sort(1,@<,Ms,M).
 
 %%%variables/2:
-variables(poly(P),V) :-
+variables_list(poly(P),V) :-
     maplist(extract_v, P, Ps),
     flatten(Ps,V).
 
 extract_v(m(_,_,V), Vs) :-
     append([],V,Vs).
 
-only_variables(poly(P),V) :-
-    variables(poly(P),Vs),
+variables(poly(P),V) :-
+    variables_list(poly(P),Vs),
     maplist(arg(2), Vs, D),
     list_to_set(D,V).
 
 %%%mvp_plus/3:
 mvp_plus(poly(M1), poly(M2), poly(Result)) :-
     append(M1, M2, Ms),
-    sum_ms(Ms, Mc),!,
-    remove_zeros(Mc, Result).
+    sum_ms(Ms, Mc),
+    !,
+    remove_zeros(Mc, Result),
+    !.
 
-sum_ms([], []).
+sum_ms([], []) :- !.
 sum_ms([m(C, TD, VP) | T], [m(CS, TD, VP) | R]) :-
     sum_m(m(C, TD, VP), T, CS, T1),
-    sum_ms(T1, R).
+    sum_ms(T1, R),
+    !.
 
-sum_m(m(C, _, _), [], C, []).
+sum_m(m(C, _, _), [], C, []) :- !.
 sum_m(m(C, TD, VP), [m(C1, TD, VP) | T], CS, R) :-
     CS1 is C + C1,
-    sum_m(m(CS1, TD, VP), T, CS, R).
+    sum_m(m(CS1, TD, VP), T, CS, R),
+    !.
 sum_m(M, [H | T], CS, [H | R]) :-
-    sum_m(M, T, CS, R).
+    sum_m(M, T, CS, R),
+    !.
 
-remove_zeros([], []).
+remove_zeros([], []) :- !.
 remove_zeros([m(0, _, _) | T], R) :-
-    remove_zeros(T, R).
-remove_zeros([H | T], [H | R]) :-
-    remove_zeros(T, R).
+    remove_zeros(T, R),
+    !.
 
+remove_zeros([H | T], [H | R]) :-
+    remove_zeros(T, R),
+    !.
+
+reverse_s([], []) :- !.
+reverse_s([m(C, TD, VP) | T], [m(CNeg, TD, VP) | T1]) :-
+    CNeg is -C,
+    reverse_s(T, T1),
+    !.
 
 %%%mvp_minus/3:
 mvp_minus(poly(M1), poly(M2), poly(Result)) :-
     reverse_s(M2, M2Neg),
     append(M1, M2Neg, MT),
-    sum_ms(MT, MC),!,
-    remove_zeros(MC, Result),!.
+    sum_ms(MT, MC),
+    !,
+    remove_zeros(MC, Result),
+    !.
 
-reverse_s([], []).
-reverse_s([m(C, TD, VP) | T], [m(CNeg, TD, VP) | T1]) :-
-    CNeg is -C,
-    reverse_s(T, T1).
 
 
 
 
 
 %%%mvp_times/3:
-mvp_times(poly(Monomi1), poly(Monomi2), poly(Result_sorted)) :-
+mvp_times(poly(Ms1), poly(Ms2), poly(Rs)) :-
     findall(m(Coeff, TD, VP),
-            (member(M1, Monomi1), member(M2, Monomi2),
+            (member(M1, Ms1), member(M2, Ms2),
              mvp_times(M1, M2, m(Coeff, TD, VP))),
-            MonomiProdotti),!,
-    sum_like_m(MonomiProdotti, MonomiSommati),
-    exclude(zero_coeff, MonomiSommati, Result),
-     predsort(compare_monomials, Result, Result_sorted).
+            MP),
+    !,
+    sum_like_m(MP, MS),
+    exclude(zero_coeff, MS, R),
+    predsort(compare_monomials, R, Rs),
+    !.
 
+mvp_times(poly(Ms1), M, poly(Rs)) :-
+    findall(m(C, TD, VP),
+            (member(M1, Ms1),
+             mvp_times(M1, M, m(C, TD, VP))),
+            MP),
+    !,
+    sum_like_m(MP, MS),
+    exclude(zero_coeff, MS, R),
+    predsort(compare_monomials, R, Rs),
+    !.
 
-mvp_times(poly(Monomi1), Monomio, poly(Result_sorted)) :-
-    findall(m(Coeff, TD, VP),
-            (member(M1, Monomi1),
-             mvp_times(M1, Monomio, m(Coeff, TD, VP))),
-            MonomiProdotti),!,
-    sum_like_m(MonomiProdotti, MonomiSommati),
-    exclude(zero_coeff, MonomiSommati, Result),
-    predsort(compare_monomials, Result, Result_sorted).
-
-mvp_times(Monomio, poly(Monomi2), poly(Result_sorted)) :-
-    findall(m(Coeff, TD, VP),
-            (member(M2, Monomi2),
-             mvp_times(Monomio, M2, m(Coeff, TD, VP))),
-            MonomiProdotti),!,
-    sum_like_m(MonomiProdotti, MonomiSommati),
-    exclude(zero_coeff, MonomiSommati, Result),
-    predsort(compare_monomials, Result, Result_sorted).
+mvp_times(M, poly(Ms2), poly(Rs)) :-
+    findall(m(C, TD, VP),
+            (member(M2, Ms2),
+             mvp_times(M, M2, m(C, TD, VP))),
+            MP),
+    !,
+    sum_like_m(MP, MS),
+    exclude(zero_coeff, MS, R),
+    predsort(compare_monomials, R, Rs),
+    !.
 
 
 mvp_times(m(C1, TD1, VP1), m(C2, TD2, VP2), m(C, TD, VP)) :-
@@ -348,35 +366,30 @@ mvp_times(m(C1, TD1, VP1), m(C2, TD2, VP2), m(C, TD, VP)) :-
     append(VP1, VP2, VPs),
     comb_var(VPs, VP).
 
-moltiplica_monomi([], _, []).
-moltiplica_monomi([m(C1, TD1, VP1) | T], m(C2, TD2, VP2), [m(C, TD, VP) | R]) :-
-    C is C1 * C2,
-    TD is TD1 + TD2,
-    append(VP1, VP2, VPList),
-    comb_var(VPList, VP),
-    moltiplica_monomi(T, m(C2, TD2, VP2), R).
 
-comb_var(VPList, Result) :-
-    comb_var(VPList, [], Result).
+comb_var(VPList, R) :-
+    comb_var(VPList, [], R).
 
 comb_var([], Acc, Acc).
-comb_var([v(D1, X) | T], Acc, Result) :-
+comb_var([v(D1, X) | T], Acc, R) :-
     ( select(v(D2, X), Acc, Rest) ->
         D is D1 + D2,
-        comb_var(T, [v(D, X) | Rest], Result)
-    ; comb_var(T, [v(D1, X) | Acc], Result)
+        comb_var(T, [v(D, X) | Rest], R)
+    ; comb_var(T, [v(D1, X) | Acc], R)
     ).
 
 
-sum_like_m(Monomi, Result) :-
-    sort_m(Monomi, MonomiOrdinati),
-    sum_like_m(MonomiOrdinati, [], Result).
+sum_like_m(M, R) :-
+    sort_m(M, MOrd),
+    sum_like_m(MOrd, [], R).
+
 sum_like_m([], Acc, Acc).
-sum_like_m([m(Coeff1, TD, VP) | T], Acc, Result) :-
-    ( select(m(Coeff2, TD, VP), Acc, Rest) ->
-        Coeff is Coeff1 + Coeff2,
-        sum_like_m(T, [m(Coeff, TD, VP) | Rest], Result)
-    ; sum_like_m(T, [m(Coeff1, TD, VP) | Acc], Result)
+
+sum_like_m([m(C1, TD, VP) | T], Acc, R) :-
+    ( select(m(C2, TD, VP), Acc, Rest) ->
+        C is C1 + C2,
+        sum_like_m(T, [m(C, TD, VP) | Rest], R)
+    ; sum_like_m(T, [m(C1, TD, VP) | Acc], R)
     ).
 
 
@@ -390,22 +403,21 @@ sort_m([m(C, TD, VP) | T], [m(C, TD, SVP) | ST]) :-
 
 
 %%%mvp_val/3:
-mvp_val(poly(Monomials), VariableValues, Value) :-
-    is_polynomial(poly(Monomials)),
-    maplist(monomial_val(VariableValues), Monomials, Values),
-    ssum_list(Values, Value).
+mvp_val(poly(Ms), Vals, V) :-
+    is_polynomial(poly(Ms)),
+    maplist(monomial_val(Vals), Ms, Values),
+    ssum_list(Values, V).
 
-monomial_val(VariableValues, m(Coeff, _, Vars), Value) :-
-    maplist(variable_val(VariableValues), Vars, VarValues),!,
-    product_list(VarValues, Product),
-    Value is Coeff * Product.
+monomial_val(Vals, m(C, _, Vars), V) :-
+    maplist(variable_val(Vals), Vars, VarValues),!,
+    product_list(VarValues, P),
+    V is C * P.
 
-variable_val(VariableValues, v(Exponent, Var), Value) :-
-    member((Var, VarValue), VariableValues),
-    Value is VarValue ** Exponent.
+variable_val(Vals, v(E, Var), V) :-
+    member((Var, VarValue), Vals),
+    V is VarValue ** E.
 
-product_list(List, Product) :-
-    foldl(multiply, List, 1, Product).
+product_list(L, P) :-
+    foldl(multiply, L, 1, P).
 
 multiply(X, Y, Z) :- Z is X * Y.
-
