@@ -207,14 +207,6 @@
           ((null head) (list td)))))
 
 
-
-;;; check-p/1
-(defun check-p (e)
-  (if (not (listp e)) nil
-    (if (and (equal (first e) 'expt) (symbolp (second e))
-	     (numberp (third e)))
-	T NIL)))
-
 ;;;parse-p/1:
 (defun parse-p (e)
   (if (check-p e)
@@ -224,6 +216,15 @@
 		      (second e)))
 	(list 'm 1 '0 nil))
     nil))
+
+
+;;; check-p/1
+(defun check-p (e)
+  (if (not (listp e)) nil
+    (if (and (equal (first e) 'expt) (symbolp (second e))
+	     (numberp (third e)))
+	T NIL)))
+
 
 
 ;;; monomial-coefficient/1
@@ -433,6 +434,7 @@
                      (sort-p (append (monomials p1)
                                         (monomials p2))))))))))
 
+;;;funzioni ausiliarie per mvp-plus:
 
 ;;;sum-like-m/1:
 (defun sum-like-m (ms)
@@ -476,6 +478,7 @@
                                         (reverse-s
                                          (monomials p2)))))))))))
 
+;;;funzioni ausiliarie per mvp-minus:
 
 ;;;reverse-s/1:
 (defun reverse-s (ms)
@@ -500,7 +503,7 @@
                               (monomials (convert-p p1))
                               (monomials (convert-p p2)))))))))
 
-
+;;;funzioni ausiliarie per mvp-times:
 
 ;;; mvp-t/2
 (defun mvp-t (ms1 ms2)
@@ -554,19 +557,29 @@
 
 
 
-(defun mvp-val (polynomial values)
-  (let ((parsed-p (convert-p polynomial)))
-    (reduce #'+
-            (mapcar (lambda (monomial)
-                      (let ((coeff (monomial-coefficient monomial))
-                            (var-powers (var-powers monomial)))
-                        (* coeff
-                           (reduce #'* (mapcar (lambda (var-power)
-                                                 (let* ((var (varpower-symbol var-power))
-                                                        (power (varpower-power var-power))
-                                                        (value (cdr (assoc var values))))
-                                                   (if value
-                                                       (expt value power)
-                                                     (error "Variable ~A not found in values list" var))))
-                                               var-powers)))))
-                    (monomials parsed-p)))))
+
+
+;;;mvp-val/2:
+(defun mvp-val (p vals)
+  (let* ((vs (variables p))
+         (a-list (pairlis vs vals)))
+    (eval-p p a-list)))
+
+;;;funzioni ausiliarie per mvp-val:
+
+;;;eval-p/2:
+(defun eval-p (p a-list)
+  (let ((terms (second p)))
+    (reduce #'+ (mapcar (lambda (term)
+                          (eval-term term a-list))
+                        terms))))
+
+;;;eval-term/2:
+(defun eval-term (term a-list)
+  (let* ((c (second term))
+         (vs (fourth term))
+         (var-vals (mapcar (lambda (v)
+                               (let ((v-name (third v)))
+                                 (expt (cdr (assoc v-name a-list)) (second v))))
+                             vs)))
+    (* c (apply #'* var-vals))))
