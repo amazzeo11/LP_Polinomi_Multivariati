@@ -1,4 +1,4 @@
-
+%%%Mazzeo	Alessia	899612
 
 %%% is_monomial/1:
 %%% monomi in forma: m(Coefficient, TotalDegree, VarsPowers)
@@ -39,7 +39,7 @@ is_zero(X) :-
     !.
 
 is_zero(m(C, _, _)) :-
- C =:= 0.
+    C =:= 0.
 
 is_zero(poly([])):- !.
 
@@ -57,22 +57,22 @@ as_polynomial(E, poly(P)) :-
 
 compare_monomials(Order, m(_, G1, V1), m(_, G2, V2)) :-
     ( G1 < G2 ->
-        Order = <
+      Order = <
     ; G1 > G2 ->
-        Order = >
+      Order = >
     ; compare_variables(V1, V2, Order)
     ).
 
 compare_variables([], [], =).
 compare_variables([v(D1, V1)|T1], [v(D2, V2)|T2], Order) :-
     ( V1 @< V2 ->
-        Order = <
+      Order = <
     ; V1 @> V2 ->
-        Order = >
+      Order = >
     ; D1 < D2 ->
-        Order = <
+      Order = <
     ; D1 > D2 ->
-        Order = >
+      Order = >
     ; compare_variables(T1, T2, Order)
     ).
 compare_variables([], [_|_], <).
@@ -211,14 +211,14 @@ pprint_polynomial(poly(M)) :-
 m_to_string(m(C, _D, V), Term) :-
     c_to_string(C, Cs),
     C>=0,!,
-    v_to_string(V, Vs),
-    format(atom(Term), '+~w~w', [Cs, Vs]).
+       v_to_string(V, Vs),
+       format(atom(Term), '+~w~w', [Cs, Vs]).
 
 m_to_string(m(C, _, V), Term) :-
     c_to_string(C, Cs),
     C<0,!,
-    v_to_string(V, Vs),
-    format(atom(Term), '~w~w', [Cs, Vs]).
+      v_to_string(V, Vs),
+      format(atom(Term), '~w~w', [Cs, Vs]).
 
 
 c_to_string(C, '') :- C =:= 1, !.
@@ -228,9 +228,9 @@ c_to_string(C, Cs) :-
 v_to_string([], '').
 v_to_string([v(Exp, N) | Vars], Vs) :-
     ( Exp =:= 1 ->
-        format(atom(V), '~w', [N])
+      format(atom(V), '~w', [N])
     ;
-        format(atom(V), '~w^~w', [N, Exp])
+    format(atom(V), '~w^~w', [N, Exp])
     ),
     v_to_string(Vars, RestVs),
     atom_concat(V, RestVs, Vs).
@@ -373,8 +373,8 @@ comb_var(VPList, R) :-
 comb_var([], Acc, Acc).
 comb_var([v(D1, X) | T], Acc, R) :-
     ( select(v(D2, X), Acc, Rest) ->
-        D is D1 + D2,
-        comb_var(T, [v(D, X) | Rest], R)
+      D is D1 + D2,
+      comb_var(T, [v(D, X) | Rest], R)
     ; comb_var(T, [v(D1, X) | Acc], R)
     ).
 
@@ -387,8 +387,8 @@ sum_like_m([], Acc, Acc).
 
 sum_like_m([m(C1, TD, VP) | T], Acc, R) :-
     ( select(m(C2, TD, VP), Acc, Rest) ->
-        C is C1 + C2,
-        sum_like_m(T, [m(C, TD, VP) | Rest], R)
+      C is C1 + C2,
+      sum_like_m(T, [m(C, TD, VP) | Rest], R)
     ; sum_like_m(T, [m(C1, TD, VP) | Acc], R)
     ).
 
