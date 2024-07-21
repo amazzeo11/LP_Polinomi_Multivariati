@@ -28,9 +28,20 @@ Dove M1, M2, … sono monomi nella forma sopra specificata.
 Nelle descrizioni seguenti si assume che polinomi e monomi abbiano sempre
 la struttura sopra indicata, a meno di diversa indicazione.
 
+Predicati forniti:
+- is_monomial/1: è vero se l'argomento passato in input è un monomio nella
+forma sopra descritta. Rispetto all'implementazione fornita è stato aggiunto
+un ulteriore controllo sulla validità delle variabili presenti nella lista 
+VPs utilizzando il predicato is_varpower/1 descritto di seguito.
 
+-is_polinomial/1: è vero se l'argomento passato in input è un polinomio nella
+forma sopra descritta. Effettua un controllo di validità su ogni monomio 
+utilizzando il predicato is_monomial/1 sopra descritto.
 
-Predicati:
+-is_varpower/1: è vero se l'argomento passato in input è una variabile nella
+forma sopra descritta.
+
+Predicati implementati:
 
 1) is_zero/1:
 Il predicato is_zero(X) controlla che il polinomio o il monomio passati in 
