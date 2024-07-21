@@ -70,27 +70,54 @@ il simbolo di funzione, il quale viene concatenato in una lista appiattita.
 Una volta elaborata tale lista vengono rimossi i duplicati.
 
 4) monomial-degree/1:
- Function monomial-degree Monomial → TotalDegree
- Data una struttura Monomial, ritorna il suo grado totale TotalDegree.
+La funzione monomial-degree Monomial → TotalDegree data una struttura
+Monomial, ritorna il suo grado totale TotalDegree estraendo il terzo
+elemento presente nel monomio. Se il grado rilevato ha un valore sensato
+viene restituito, altrimenti viene restituito nil.
+Se viene passato in input un polinomio viene restituito nil poiché viene
+riciesto di gestire esclusivamente i monomi.
 
 5) monomial-coefficient/1:
-Function monomial-coefficient Monomial → Coefficient
- Data una struttura Monomial, ritorna il suo coefficiente Coefficient.
+La funzione monomial-coefficient Monomial → Coefficient data una struttura 
+Monomial, ritorna il suo coefficiente Coefficient, estraendolo dal secondo
+elemento presente nel monomio. Se il coefficiente ha un valore sensato viene
+restituito, altrimenti viene restituito nil.
+Se il monomio è nullo viene restituito 0.
 
-6)Function coefficients Poly → Coefficients
- La funzione coefficients ritorna una lista Coefficients dei– ovviamente– coefficienti di Poly.
+6) coefficients/1:
+La funzione coefficients Poly → Coefficients dato in input un polinomio 
+ritorna una lista Coefficients dei coefficienti dei monomi presenti in Poly.
+I monomi vengono estratti da Poly mediante monomials/1, se la lista è nulla 
+viene restituito 0, altrimenti viene invocata la funzione 
+monomial-coefficient/1 su ogni monomio, e viene creata una lista contenente 
+tutti i coefficienti estratti.
 
-7)Function variables Poly → Variables
- La funzione variables ritorna una lista Variables dei simboli di variabile che appaiono in Poly.
+7) variables/1:
+La funzione variables Poly → Variables dato in input un polinomio
+ritorna una lista Variables dei simboli di variabile che appaiono in Poly.
+I monomi vengono estratti da Poly mediante monomials/1 (descritta in seguito),
+per ciascun monomio viene invocata var-powers/1 per estrarre la lista delle 
+variabili presenti, che vengono inserite in un'unica lista appiattita.
+Vengono poi estratti i simboli di variabile con la funzione varpower-symbol/1,
+e vengono rimossi i duplicati.
 
-8)Function monomials Poly → Monomials
- La funzione monomials ritorna la lista– ordinata, si veda sotto– dei monomi che appaiono in Poly.
+8) monomials/1:
+La funzione monomials Poly → Monomials dato in input un polinomio
+ritorna la lista ordinata dei monomi che appaiono in Poly, estraendola dal 
+polinomio escludendo il primo elemento "poly".
 
-9)Function max-degree Poly → Degree
- La funzione max-degree ritorna il massimo grado dei monomi che appaiono in Poly.
+9) max-degree/1:
+La funzione max-degree Poly → Degree dato in input un polinomio, ritorna il
+massimo grado dei monomi che appaiono in Poly. Per farlo estrae i monomi da 
+Poly con la funzione monomials/1, e seleziona l'ultimo della lista.
+A questo punto estrae il suo coefficiente utilizzando monomial-degree/1.
 
-10)Function min-degree Poly → Degree
- La funzione min-degree ritorna il minimo grado dei monomi che appaiono in Poly.
+
+10) min-degree/1:
+La funzione min-degree Poly → Degree dato in input un polinomio, ritorna il
+ minimo grado dei monomi che appaiono in Poly. Per farlo estrae i monomi da 
+Poly con la funzione monomials/1, e seleziona il primo della lista.
+A questo punto estrae il suo coefficiente utilizzando monomial-degree/1.
 
 11)Function mvp-plus Poly1 Poly2 → Result
  La funzione mvp-plus produce il polinomio somma di Poly1 e Poly2.
