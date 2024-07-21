@@ -333,10 +333,10 @@
 (defun vars-of (mn)
   (if (not (and (equal (first mn) 'm) (= (length mn) 4)))
       (vars-of (as-monomial mn))
-    (remove-duplicates
-      (apply #'append
-	     (let ((vps (var-powers mn)))
-	       (append (list (mapcar (lambda (x) (third x)) vps))))))))
+      (remove-duplicates
+       (apply #'append
+	      (let ((vps (var-powers mn)))
+		(append (list (mapcar (lambda (x) (third x)) vps))))))))
 
 
 ;;;coefficients/1:
